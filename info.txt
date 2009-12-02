@@ -1,0 +1,8 @@
+REBOL 3 Host Build Distribution
+
+  Version:  2.100.96.0.0 
+  Built:  2-Dec-2009/15:37:52-8:00 
+
+Test build only for early alpha-test developers. Do not distribute.
+
+Documentation: http://www.rebol.net/wiki/Host-Builds

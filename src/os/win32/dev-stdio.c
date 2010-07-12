@@ -41,6 +41,9 @@
 
 #define SF_DEV_NULL 31			// local flag to mark NULL device
 
+#define CONSOLE_MODES ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT \
+		| 0x0040 | 0x0020  // quick edit and insert mode (not defined in VC6)
+
 static HANDLE Std_Out = 0;
 static HANDLE Std_Inp = 0;
 static HANDLE Std_Echo = 0;
@@ -154,7 +157,11 @@ static void attach_console(void) {
 			// Get the new stdio handles:
 			Std_Out = GetStdHandle(STD_OUTPUT_HANDLE);
 
-			if (!Redir_Inp)	Std_Inp = GetStdHandle(STD_INPUT_HANDLE);
+			if (!Redir_Inp)	{
+				Std_Inp = GetStdHandle(STD_INPUT_HANDLE);
+				// Make the Win32 console a bit smarter by default:
+				SetConsoleMode(Std_Inp, CONSOLE_MODES);
+			}
 		}
 
 		Std_Buf = OS_Make(BUF_SIZE * sizeof(REBCHR));

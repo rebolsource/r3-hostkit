@@ -24,4 +24,9 @@
 #include "reb-net.h"
 #include "reb-filereq.h"
 
+#ifdef FULL_DEFS
+#include "reb-series.h"
+#endif
 
+#include "reb-gob.h"
+#include "reb-ext.h"

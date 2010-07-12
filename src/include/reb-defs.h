@@ -16,8 +16,8 @@
 ***********************************************************************/
 
 #ifndef FULL_DEFS
-typedef void REBSER;
-typedef void REBGOB;
+typedef void *REBSER;
+//typedef void REBGOB;
 #endif
 
 // X/Y coordinate pair:

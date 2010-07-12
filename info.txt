@@ -1,8 +1,28 @@
-REBOL 3 Host Build Distribution
+REBOL 3 Host-Kit Source Distribution
+From REBOL Technologies in Ukiah, California
 
-  Version:  2.100.96.0.0 
-  Built:  2-Dec-2009/15:37:52-8:00 
+    Version: 2.100.100.0.0  (alpha)
+    Updated: 12-Jul-2010/13:33:45-7:00 
 
-Test build only for early alpha-test developers. Do not distribute.
+The purpose of the R3 Host-Kit is to provide developers with a method of
+building custom versions of REBOL, including built-in extension modules.
 
-Documentation: http://www.rebol.net/wiki/Host-Builds
+The license for the R3 Host-Kit is free for commercial, educational, and
+hobby uses with "free" meaning "no charge" for such usage. However,
+there are a few minor restrictions, so please read this document:
+
+    http://www.rebol.com/r3/docs/concepts/host-kit.html
+
+Also, if you make a useful addition to R3, please consider publishing it
+to the REBOL community. It's a good way to get others involved and it helps
+promote the REBOL zen way of programming.
+
+NOTE: To build R3, you need a copy of rebol.exe in your build directory.
+
+Enjoy the Host-Kit,
+
+-Carl
+
+Carl Sassenrath
+System and Language Designer
+

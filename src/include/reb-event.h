@@ -36,6 +36,7 @@ enum {
 	EVF_IS_PORT,
 	EVF_IS_OBJ,
 	EVF_COPIED,		// event data has been copied
+	EVF_HAS_XY,		// map-event will work on it
 };
 
 // Special messages

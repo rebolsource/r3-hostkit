@@ -1,21 +1,22 @@
 /***********************************************************************
 **
 **  REBOL 3.0 "Invasion"
-**  Copyright 2009 REBOL Technologies
+**  Copyright 2010 REBOL Technologies
 **  All rights reserved.
 **
 ************************************************************************
 **
 **  Title: Host Access Library
-**  Build: A96
-**  Date:  2-Dec-2009/15:37:16-8:00
+**  Build: A100
+**  Date:  12-Jul-2010/13:26:27-7:00
 **  File:  host-lib.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-os-ext.r)
 **
 ***********************************************************************/
 
-#define HOST_LIB_VER 96
+
+#define HOST_LIB_VER 100
 #define HOST_LIB_SUM 5782
 #define HOST_LIB_SIZE 30
 

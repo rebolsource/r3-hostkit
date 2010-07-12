@@ -1,19 +1,20 @@
 /***********************************************************************
 **
 **  REBOL 3.0 "Invasion"
-**  Copyright 2009 REBOL Technologies
+**  Copyright 2010 REBOL Technologies
 **  All rights reserved.
 **
 ************************************************************************
 **
 **  Title: Event Types
-**  Build: A96
-**  Date:  2-Dec-2009/15:37:16-8:00
+**  Build: A100
+**  Date:  12-Jul-2010/13:26:27-7:00
 **  File:  reb-evtypes.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-boot.r)
 **
 ***********************************************************************/
+
 
 enum event_types {
     EVT_IGNORE,

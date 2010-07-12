@@ -43,7 +43,8 @@
 #include "reb-host.h"		// standard host include files
 #include "host-lib.h"		// OS host library (dispatch table)
 #include "rebol-lib.h"		// REBOL library (function prototypes)
-#include "host-init.h"		// custom REBOL boot code
+
+#include "host-init.c"
 
 /**********************************************************************/
 
@@ -56,6 +57,11 @@ REBARGS Main_Args;
 HINSTANCE App_Instance = 0;
 #endif
 
+#ifndef CORE_ONLY
+extern void Init_Windows(void);
+extern void Init_Graphics(void);
+#endif
+
 // Host bare-bones stdio functs:
 void Open_StdIO(void);
 void Put_Str(char *buf);
@@ -64,6 +70,38 @@ REBYTE *Get_Str();
 void Host_Crash(REBYTE *reason) {
 	OS_Crash("REBOL host failure", reason);
 }
+
+
+/***********************************************************************
+**
+**  Example Embedded Extension
+**  See: http://www.rebol.com/r3/docs/concepts/extensions-embedded.html
+**
+***********************************************************************/
+
+#ifdef EMBEDDED_EXTENSION
+
+char *RX_Spec =
+    "REBOL [\n"
+        "Title: {Hosted extension}\n"
+		"Name: hosted\n"
+        "Type: extension\n"
+        "Exports: [add3 mul3]\n"
+    "]\n"
+    "add3: command [a b c]\n"
+    "mul3: command [a b c]\n"
+;
+
+RXIEXT int RX_Call(int cmd, RXIFRM *frm) {
+	if (cmd == 1) {
+		RXA_INT64(frm, 1) = RXA_INT64(frm, 1) + RXA_INT64(frm, 2) + RXA_INT64(frm, 3);
+	} else {
+		RXA_INT64(frm, 1) = RXA_INT64(frm, 1) * RXA_INT64(frm, 2) * RXA_INT64(frm, 3);
+	}
+    return RXR_VALUE;
+}
+
+#endif
 
 
 /***********************************************************************
@@ -120,8 +158,17 @@ int main(int argc, char **argv)
 	if (n == 1) Host_Crash("REBOL DLL wrong size");
 	if (n == 2) Host_Crash("REBOL DLL wrong version/checksum");
 
+#ifndef CORE_ONLY
+	Init_Windows();
+	Init_Graphics();
+#endif
+
+#ifdef EMBEDDED_EXTENSION
+	Reb_Extend(&RX_Spec[0], &RX_Call);
+#endif
+
 	// Initialize host bundled source code:
-	Reb_Do_Binary(Reb_Init_Code, REB_INIT_SIZE, 0, 0);
+	Reb_Do_Binary((REBYTE *)(&Reb_Init_Code[0]), REB_INIT_SIZE, 0, 0);
 
 	// Run REBOL's mezzanine bootstrap:
 	n = (Main_Args.options & RO_NO_BOOT) ? TRUE : Reb_Start(0); // TRUE on halt

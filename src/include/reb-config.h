@@ -26,7 +26,6 @@
 
 #ifdef TO_WIN32					// Win32/Intel
 
-#define FULL_DEF				// fully defined
 #define	WIN32_LEAN_AND_MEAN		// trim down the Win32 headers
 #define ENDIAN_LITTLE			// uses little endian byte order
 #define OS_WIDE_CHAR			// OS uses WIDE_CHAR API
@@ -97,6 +96,11 @@
 #define HAS_ECVT
 #define HAS_LL_CONSTS
 #define OLD_COMPILER
+#endif
+
+#ifdef TO_FREEBSD
+#define ENDIAN_LITTLE
+#define HAS_LONG_DOUBLE
 #endif
 
 #ifdef TO_OBSD					// OpenBSD

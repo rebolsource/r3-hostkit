@@ -1,7 +1,7 @@
 /***********************************************************************
 **
 **  REBOL 3.0 "Invasion"
-**  Copyright 2009 REBOL Technologies
+**  Copyright 2010 REBOL Technologies
 **  All rights reserved.
 **
 ************************************************************************
@@ -30,6 +30,7 @@
 #endif
 
 #include <windows.h>
+#include <math.h>
 
 #include "reb-host.h"
 #include "host-lib.h" 
@@ -68,7 +69,7 @@ static REBOOL Custom_Cursor = FALSE;
 
 REBGOB *Gob_Root;				// Top level GOB (the screen)
 HCURSOR Cursor;					// active cursor image object
-REBOL_OS_METRICS Metrics;		// window system metrics (sizes, etc.)
+//REBOL_OS_METRICS Metrics;		// window system metrics (sizes, etc.)
 REBPAR Zero_Pair = {0, 0};
 void* Rich_Text; // temp
 //void* Effects;
@@ -259,10 +260,10 @@ static void Free_Window(REBGOB *gob) {
 	if (windex < 0) Host_Crash("Too many windows");
 
 	CLEAR_GOB_STATE(gob);
-	x = GOB_X(gob);
-	y = GOB_Y(gob);
-	w = GOB_W(gob);
-	h = GOB_H(gob);
+	x = GOB_X_INT(gob);
+	y = GOB_Y_INT(gob);
+	w = GOB_W_INT(gob);
+	h = GOB_H_INT(gob);
 
 	SET_GOB_STATE(gob, GOBS_NEW);
 
@@ -270,28 +271,30 @@ static void Free_Window(REBGOB *gob) {
 	
 	options = WS_POPUP;
 
+// Note: Metrics temporarily disabled in A100
+
 	if (!GET_FLAGS(gob->flags, GOBF_NO_TITLE, GOBF_NO_BORDER)) {
 		options |= WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU;
-		h += Metrics.title_size.y;
-		y -= Metrics.title_size.y;
+//		h += Metrics.title_size.y;
+//		y -= Metrics.title_size.y;
 	}
 
 	if (GET_GOB_FLAG(gob, GOBF_RESIZE)) {
 		options |= WS_SIZEBOX | WS_BORDER;
-		x -= Metrics.border_size.x;
-		y -= Metrics.border_size.y;
-		w += Metrics.border_size.x * 2;
-		h += Metrics.border_size.y * 2;
+//		x -= Metrics.border_size.x;
+//		y -= Metrics.border_size.y;
+//		w += Metrics.border_size.x * 2;
+//		h += Metrics.border_size.y * 2;
 		if (!GET_GOB_FLAG(gob, GOBF_NO_TITLE))
 			options |= WS_MAXIMIZEBOX;
 	}
 	else if (!GET_GOB_FLAG(gob, GOBF_NO_BORDER)) {
 		options |= WS_BORDER;
 		if (!GET_GOB_FLAG(gob, GOBF_NO_TITLE)){
-			x -= Metrics.border_fixed.x;
-			y -= Metrics.border_fixed.y;
-			w += Metrics.border_fixed.x * 2;
-			h += Metrics.border_fixed.y * 2;
+//			x -= Metrics.border_fixed.x;
+//			y -= Metrics.border_fixed.y;
+//			w += Metrics.border_fixed.x * 2;
+//			h += Metrics.border_fixed.y * 2;
 		}
 	}
 
@@ -437,10 +440,10 @@ static void Free_Window(REBGOB *gob) {
 
 	//Get the new window size together with borders, tilebar etc.
 	GetWindowInfo(window, &wi);
-	r.left   = GOB_X(gob);
-	r.right  = r.left + GOB_W(gob);
-	r.top    = GOB_Y(gob);
-	r.bottom = r.top + GOB_H(gob);
+	r.left   = GOB_X_INT(gob);
+	r.right  = r.left + GOB_W_INT(gob);
+	r.top    = GOB_Y_INT(gob);
+	r.bottom = r.top + GOB_H_INT(gob);
 	AdjustWindowRect(&r, wi.dwStyle, FALSE);
 
 	//Set the new size
@@ -489,8 +492,8 @@ static void Free_Window(REBGOB *gob) {
 	BitmapInfo.bmiHeader.biWidth = ssize.x;
 	BitmapInfo.bmiHeader.biHeight = -(REBINT)dsize.y;
 #else
-	BitmapInfo.bmiHeader.biWidth = gob->size.x;
-	BitmapInfo.bmiHeader.biHeight = -(REBINT)gob->size.y;
+	BitmapInfo.bmiHeader.biWidth = ROUND_TO_INT(gob->size.x);
+	BitmapInfo.bmiHeader.biHeight = -ROUND_TO_INT(gob->size.y);
 #endif
 	BitmapInfo.bmiHeader.biPlanes = 1;
 	BitmapInfo.bmiHeader.biBitCount = 32;
@@ -580,8 +583,9 @@ static void Free_Window(REBGOB *gob) {
 
 #ifdef NO_COMPOSITOR
 	// Blit the current gob:
-	if (IS_GOB_IMAGE(gob))
+	if (IS_GOB_IMAGE(gob)) {
 		Blit_Rect(wingob, gob->offset, gob->size, GOB_BITMAP(gob), Zero_Pair, gob->size);
+	}
 	else { //if (IS_GOB_COLOR(gob))
 		Blit_Color(wingob, gob->offset, gob->size, (long)GOB_CONTENT(gob));
 	}
@@ -614,6 +618,7 @@ static void Free_Window(REBGOB *gob) {
 {
 	PAINTSTRUCT ps;
 	REBGOB *gob;
+	REBPAR size;
 
 	gob = (REBGOB *)GetWindowLong(window, GWL_USERDATA);
 
@@ -624,7 +629,9 @@ static void Free_Window(REBGOB *gob) {
 #ifdef NO_COMPOSITOR
 		Draw_Window(gob, gob);
 #else
-		Blit_Rect(gob, Zero_Pair, gob->size, Get_Window_Buffer(GOB_COMPOSITOR(gob)), Zero_Pair, gob->size);
+		size.x = ROUND_TO_INT(gob->size.x);
+		size.y = ROUND_TO_INT(gob->size.y);
+		Blit_Rect(gob, Zero_Pair, size, Get_Window_Buffer(GOB_COMPOSITOR(gob)), Zero_Pair, size);
 #endif
 
 		EndPaint(window, (LPPAINTSTRUCT) &ps);

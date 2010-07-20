@@ -1,7 +1,7 @@
 /***********************************************************************
 **
 **  REBOL 3.0 "Invasion"
-**  Copyright 2009 REBOL Technologies
+**  Copyright 2010 REBOL Technologies
 **  All rights reserved.
 **
 ************************************************************************
@@ -101,6 +101,12 @@
 #ifdef TO_FREEBSD
 #define ENDIAN_LITTLE
 #define HAS_LONG_DOUBLE
+#endif
+
+#ifdef TO_OPENBSD
+#define ENDIAN_LITTLE
+#define HAS_LL_CONSTS
+#define HAS_ECVT
 #endif
 
 #ifdef TO_OBSD					// OpenBSD

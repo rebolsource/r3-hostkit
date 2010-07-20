@@ -11,18 +11,28 @@ extern "C" REBINT Draw_Gob(void *graphics, REBSER *block, REBSER *args);
 
 namespace agg
 {
-	extern "C" void agg_box(void* gr, REBPAR* p1, REBPAR* p2, REBDEC r)
+	extern "C" void agg_box(void* gr, REBXYF p1, REBXYF p2, REBDEC r)
 	{
 		if (r) {
-			((agg_graphics*)gr)->agg_rounded_rect(p1->x, p1->y, p2->x, p2->y, r);
+			((agg_graphics*)gr)->agg_rounded_rect(p1.x, p1.y, p2.x, p2.y, r);
 		} else {
-			((agg_graphics*)gr)->agg_box(p1->x, p1->y, p2->x, p2->y);
+			((agg_graphics*)gr)->agg_box(p1.x, p1.y, p2.x, p2.y);
 		}
 	}
 
-	extern "C" void agg_circle(void* gr, REBPAR* p1, REBDEC rx, REBDEC ry)
+	extern "C" void agg_circle(void* gr, REBXYF p, REBXYF r)
 	{
-		((agg_graphics*)gr)->agg_ellipse(p1->x, p1->y, rx, ry);
+		((agg_graphics*)gr)->agg_ellipse(p.x, p.y, r.x, r.y);
+	}
+
+	extern "C" void agg_begin_poly (void* gr, REBXYF p)
+	{
+		((agg_graphics*)gr)->agg_begin_poly(p.x, p.y);
+	}
+
+	extern "C" void agg_add_vertex (void* gr, REBXYF p)
+	{
+		((agg_graphics*)gr)->agg_add_vertex(p.x, p.y);
 	}
 
 	extern "C" void agg_pen(void* gr, REBYTE* col, REBSER* img)
@@ -46,16 +56,6 @@ namespace agg
 		else
 			((agg_graphics*)gr)->agg_fill_pen(0, 0, 0, 0);
 
-	}
-
-	extern "C" void agg_begin_poly (void* gr, REBDEC x,  REBDEC y)
-	{
-		((agg_graphics*)gr)->agg_begin_poly(x, y);
-	}
-
-	extern "C" void agg_add_vertex (void* gr, REBDEC x,  REBDEC y)
-	{
-		((agg_graphics*)gr)->agg_add_vertex(x, y);
 	}
 
 

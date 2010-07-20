@@ -40,8 +40,8 @@ namespace agg
 
 	void compositor::cp_alloc_buffer(REBGOB* winGob){
 		//setup and allocate window backbuffer
-		m_width = GOB_W(winGob);
-		m_height = GOB_H(winGob);
+		m_width = GOB_W_INT(winGob);
+		m_height = GOB_H_INT(winGob);
 		m_stride = 4 * m_width;
 		
 		int buflen = m_width * m_height * 4;

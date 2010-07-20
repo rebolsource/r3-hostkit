@@ -1,13 +1,13 @@
 /***********************************************************************
 **
 **  REBOL 3.0 "Invasion"
-**  Copyright 2009 REBOL Technologies
+**  Copyright 2010 REBOL Technologies
 **  All rights reserved.
 **
 ************************************************************************
 **
 **  Title: Miscellaneous structures and definitions
-**  Date:  1-Dec-2009
+**  Date:  16-July-2010
 **  File:  reb_defs.h
 **
 **  Note: This file is used by internal and external C code. It
@@ -15,16 +15,27 @@
 **
 ***********************************************************************/
 
-#ifndef FULL_DEFS
+#ifndef REB_DEFS_H  // due to sequences within the lib build itself
+#define REB_DEFS_H
+
+#ifndef AS_LIB
 typedef void *REBSER;
-//typedef void REBGOB;
+typedef void *REBOBJ;
 #endif
 
-// X/Y coordinate pair:
-typedef struct rebol_pair {
+// X/Y coordinate pair as floats:
+typedef struct rebol_xy_float {
+	float x;
+	float y;
+} REBXYF;
+
+// X/Y coordinate pair as integers:
+typedef struct rebol_xy_int {
 	int x;
 	int y;
-} REBPAR;
+} REBXYI;
+
+#define REBPAR REBXYI  // temporary until all sources are converted
 
 // Standard date and time:
 typedef struct rebol_dat {
@@ -36,7 +47,7 @@ typedef struct rebol_dat {
 	int zone;
 } REBOL_DAT;  // not same as REBDAT
 
-// OS metrics:
+// OS metrics: (not used as of A100!)
 typedef struct rebol_met {
 	int len; // # entries in this table
 	REBPAR screen_size;
@@ -45,4 +56,6 @@ typedef struct rebol_met {
 	REBPAR border_fixed;
 	REBPAR work_origin;
 	REBPAR work_size;
-} REBOL_OS_METRICS;
+} X_REBOL_OS_METRICS;
+
+#endif

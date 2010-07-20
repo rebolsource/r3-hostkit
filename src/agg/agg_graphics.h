@@ -60,14 +60,10 @@
 #include "agg_blur.h"
 
 //REBOL stuff
-//#define FULL_DEFS
 #include "reb-config.h"
 #include "reb-c.h"
 #include "reb-defs.h"
-//#include "reb-series.h"
 #include "reb-gob.h"
-//#include "reb-value.h"
-//#include "reb-types.h"
 #undef IS_ERROR
 
 namespace agg

@@ -1,7 +1,7 @@
 /***********************************************************************
 **
 **  REBOL 3.0 "Invasion"
-**  Copyright 2009 REBOL Technologies
+**  Copyright 2010 REBOL Technologies
 **  All rights reserved.
 **
 ************************************************************************
@@ -79,6 +79,7 @@ typedef i64             REBI64;     // 64 bit integer
 typedef u64             REBU64;     // 64 bit unsigned integer
 typedef char            REBOOL;     // 8  bit flag (for struct usage)
 typedef unsigned int    REBFLG;     // 32 bit flag (for cpu efficiency)
+typedef float           REBD32;     // 32 bit decimal
 typedef double          REBDEC;     // 64 bit decimal
 
 #ifdef HAS_LONG_DOUBLE
@@ -251,3 +252,5 @@ typedef void(*CFUNC)(void *);
 #endif
 
 #define MAKE_STR(n) (REBCHR*)(malloc((n) * sizeof(REBCHR)))  // OS chars!
+
+#define ROUND_TO_INT(d) (REBINT)(floor((d) + 0.5))

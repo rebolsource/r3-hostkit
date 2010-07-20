@@ -29,8 +29,7 @@ lines: command [
 circle: command [
 	"Draw a circle or ellipse."
 	origin [pair!]
-	radius-x [decimal!]
-	radius-y [decimal!]
+	radius [pair!]
 ]
 
 pen: command [

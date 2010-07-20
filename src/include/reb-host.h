@@ -1,13 +1,13 @@
 /***********************************************************************
 **
 **  REBOL 3.0 "Invasion"
-**  Copyright 2009 REBOL Technologies
+**  Copyright 2010 REBOL Technologies
 **  All rights reserved.
 **
 ************************************************************************
 **
 **  Title: Include files for hosting
-**  Date:  1-Dec-2009
+**  Date:  20-July-2010
 **  File:  reb-host.h
 **
 ***********************************************************************/
@@ -15,7 +15,7 @@
 #include "reb-config.h"
 
 #include "reb-c.h"
-#include "reb-defs.h"
+#include "reb-ext.h"		// includes reb-defs.h
 #include "reb-args.h"
 #include "reb-device.h"
 #include "reb-file.h"
@@ -24,9 +24,4 @@
 #include "reb-net.h"
 #include "reb-filereq.h"
 
-#ifdef FULL_DEFS
-#include "reb-series.h"
-#endif
-
 #include "reb-gob.h"
-#include "reb-ext.h"

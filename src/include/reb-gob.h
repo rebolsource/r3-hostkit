@@ -97,16 +97,21 @@ struct rebol_gob {		// size: 64 bytes!
 	REBSER *content;	// content value (block, string, color)
 	REBSER *data;		// user defined data
 
-	REBPAR offset;		// location
-	REBPAR size;
-	REBPAR old_offset;	// prior location
-	REBPAR old_size;	// prior size
+	REBXYF offset;		// location
+	REBXYF size;
+	REBXYF old_offset;	// prior location
+	REBXYF old_size;	// prior size
 };
 
 #define GOB_X(g)		((g)->offset.x)
 #define GOB_Y(g)		((g)->offset.y)
 #define GOB_W(g)		((g)->size.x)
 #define GOB_H(g)		((g)->size.y)
+
+#define GOB_X_INT(g)	ROUND_TO_INT((g)->offset.x)
+#define GOB_Y_INT(g)	ROUND_TO_INT((g)->offset.y)
+#define GOB_W_INT(g)	ROUND_TO_INT((g)->size.x)
+#define GOB_H_INT(g)	ROUND_TO_INT((g)->size.y)
 
 #define GOB_XO(g)		((g)->old_offset.x)
 #define GOB_YO(g)		((g)->old_offset.y)
@@ -140,7 +145,7 @@ struct rebol_gob {		// size: 64 bytes!
 #define GOB_CONTENT(g)	((g)->content)
 
 // Control dependencies on series structures:
-#ifdef FULL_DEFS
+#ifdef AS_LIB
 #define GOB_STRING(g)	SERIES_DATA(GOB_CONTENT(g))
 #define GOB_TAIL(g)		SERIES_TAIL((g)->pane)
 #define GOB_HEAD(g)		((REBGOB **)(SERIES_DATA(GOB_PANE(g))))

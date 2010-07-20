@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: Event Types
-**  Build: A100
-**  Date:  12-Jul-2010/13:26:27-7:00
+**  Build: A101
+**  Date:  20-Jul-2010/16:01:51-7:00
 **  File:  reb-evtypes.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-boot.r)

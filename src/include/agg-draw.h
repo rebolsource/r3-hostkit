@@ -3,13 +3,14 @@
 extern REBINT Draw_Image(REBSER *image, REBSER *block);
 extern void agg_get_size(void* gr, REBPAR* p);
 
-extern void agg_add_vertex (void* gr, REBDEC x,  REBDEC y);
+extern void agg_begin_poly (void* gr, REBXYF p);
+extern void agg_add_vertex (void* gr, REBXYF p);
+extern void agg_box(void* gr, REBXYF p1, REBXYF p2, REBDEC r);
+extern void agg_circle(void* gr, REBXYF p, REBXYF r);
+
 extern void agg_anti_alias(void* gr, REBINT mode);
 extern void agg_arc(void* gr, REBPAR* c, REBPAR* r, REBDEC ang1, REBDEC ang2, REBINT closed);
 extern void agg_arrow(void* gr, REBCHR* c, REBPAR* ht);
-extern void agg_begin_poly (void* gr, REBDEC x,  REBDEC y);
-extern void agg_box(void* gr, REBPAR* p1, REBPAR* p2, REBDEC r);
-extern void agg_circle(void* gr, REBPAR* p1, REBDEC rx, REBDEC ry);
 extern void agg_clip(void* gr, REBPAR* p1, REBPAR* p2);
 extern void agg_curve3(void* gr, REBPAR* p1, REBPAR* p2, REBPAR* p3);
 extern void agg_curve4(void* gr, REBPAR* p1, REBPAR* p2, REBPAR* p3, REBPAR* p4);

@@ -72,8 +72,8 @@ extern REBINT Show_Gob(REBGOB *gob);
 
 	case CMD_INIT_GRAPHICS:
 		Gob_Root = (REBGOB*)RXA_SERIES(frm, 1); // system/view/screen-gob
-		Gob_Root->size.x = GetSystemMetrics(SM_CXSCREEN);
-		Gob_Root->size.y  = GetSystemMetrics(SM_CYSCREEN);
+		Gob_Root->size.x = (REBD32)GetSystemMetrics(SM_CXSCREEN);
+		Gob_Root->size.y = (REBD32)GetSystemMetrics(SM_CYSCREEN);
 		break;
 
 	default:
@@ -94,11 +94,11 @@ extern REBINT Show_Gob(REBGOB *gob);
 	switch (cmd) {
 
 	case CMD_BOX:
-		agg_box(data, &RXA_PAIR(frm, 1), &RXA_PAIR(frm, 2), 0);
+		agg_box(data, RXA_PAIR(frm, 1), RXA_PAIR(frm, 2), 0);
 		break;
 
 	case CMD_CIRCLE:
-		agg_circle(data, &RXA_PAIR(frm, 1), RXA_DEC64(frm, 2), RXA_DEC64(frm, 3));
+		agg_circle(data, RXA_PAIR(frm, 1), RXA_PAIR(frm, 2));
 		break;
 
 	case CMD_LINES:
@@ -111,9 +111,9 @@ extern REBINT Show_Gob(REBGOB *gob);
 			for (n = 0; type = RXI_GET_VALUE(blk, n, &val); n++) {
 				if (type == RXT_PAIR) {
 					if (n > 0)
-						agg_add_vertex(data, (REBDEC)(val.int32a),  (REBDEC)(val.int32b));
+						agg_add_vertex(data, val.pair);
 					else
-						agg_begin_poly(data, (REBDEC)(val.int32a),  (REBDEC)(val.int32b));
+						agg_begin_poly(data, val.pair);
 				}
 			}
 		}

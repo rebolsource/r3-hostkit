@@ -1,16 +1,14 @@
-REBOL [Title: "Host-Kit Graphics: Basic GOB Compositing Test"]
-
-view/no-wait main: make gob! [color: black offset: 0x0 size: 500x500]
-;do
-[
-	append main make gob! [
-		offset: 0x0
-		size: 500x500 
-		draw: [pen 255.0.0 circle 200x200 200.0 200.0]
-	]
-	show main
-	wait 100
+REBOL [
+	Title: "Host-Kit Graphics: Basic GOB Compositing Test"
+	Version: 1.0.1
+	Author: "Carl Sassenrath"
+	Notes: {
+		A101: PAIRs are now floating point, and commands like CIRCLE
+			can pass a pair for second argument.
+	}
 ]
+
+win: view/no-wait main: make gob! [color: black offset: 0x0 size: 500x500]
 
 to-draw: func [block] [bind reduce block import 'draw]
 
@@ -39,7 +37,7 @@ loop 100 [
 			draw:   to-draw [
 				'pen random 255.255.255 
 				'fill-pen random 255.255.255.255
-				'circle sz sz/x * 98% sz/y * 98%
+				'circle sz sz * 98%
 			]
 			offset: random 300x300
 			size:   sz * 2
@@ -79,3 +77,5 @@ loop 100 [
 	show main
 	wait pause
 ]
+
+unview win

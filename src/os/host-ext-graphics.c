@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: REBOL Graphics - Module Initialization
-**  Build: A100
-**  Date:  12-Jul-2010/13:29:57-7:00
+**  Build: A101
+**  Date:  20-Jul-2010/16:05:05-7:00
 **  File:  host-ext-graphics
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-host-ext.r)

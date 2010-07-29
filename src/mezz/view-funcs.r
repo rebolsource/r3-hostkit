@@ -205,7 +205,8 @@ init-view-system: func [
 	"Initialize the View subsystem."
 	/local ep
 ][
-	init-graphics system/view/screen-gob: make gob! [text: "Top Gob"]
+	; The init function called here resides in this module
+	init system/view/screen-gob: make gob! [text: "Top Gob"]
 
 	; Already initialized?
 	if system/view/event-port [exit]

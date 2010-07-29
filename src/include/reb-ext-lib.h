@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: REBOL Extension API
-**  Build: A101
-**  Date:  20-Jul-2010/16:01:51-7:00
+**  Build: A102
+**  Date:  29-Jul-2010/15:04:11-7:00
 **  File:  reb-ext-lib.r
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-ext-lib.r)
@@ -21,6 +21,8 @@ typedef struct rebol_ext_api {
 	int version;
 	void *(*make_block)(u32 size);
 	void *(*make_string)(u32 size, int unicode);
+	void *(*make_image)(u32 width, u32 height);
+	void (*gc_protect)(REBSER *series, BOOL protect);
 	int (*get_string)(REBSER *series, u32 index, void **str);
 	u32 (*map_word)(REBYTE *string);
 	u32 *(*map_words)(REBSER *series);
@@ -94,6 +96,44 @@ RXILIB *RXI;  // Passed to the Init() function
 **		However, you can lock strings to prevent deallocation. (?? default)
 */
 
+#define RXI_MAKE_IMAGE(a,b)         RXI->make_image(a,b)
+/*
+**	void *RXI_make_image(u32 width, u32 height)
+**
+**	Allocate a new image of the given size.
+**
+**	Returns:
+**		A pointer to an image series.
+**	Arguments:
+**		width - the width of the image in pixels
+**		height - the height of the image in lines
+**	Notes:
+**		Images are allocated with REBOL's internal memory manager.
+**		Image are automatically garbage collected if there are
+**		no references to them from REBOL code (C code does nothing.)
+*/
+
+#define RXI_GC_PROTECT(a,b)         RXI->gc_protect(a,b)
+/*
+**	void RXI_gc_protect(REBSER *series, BOOL protect)
+**
+**	Protect memory from garbage collection.
+**
+**	Returns:
+**		nothing
+**	Arguments:
+**		series - a series to protect (block, string, image, ...)
+**		protect - TRUE to protect, FALSE to unprotect
+**	Notes:
+**		You should only use this function when absolutely necessary,
+**		because it bypasses garbage collection for the specified series.
+**		Meaning: if you protect a series, it will never be freed.
+**		Also, you only need this function if you allocate several series
+**		such as strings, blocks, images, etc. within the same command
+**		and you don't store those references somewhere where the GC can
+**		find them, such as in an existing block or object (variable).
+*/
+
 #define RXI_GET_STRING(a,b,c)       RXI->get_string(a,b,c)
 /*
 **	int RXI_get_string(REBSER *series, u32 index, void **str)
@@ -135,12 +175,13 @@ RXILIB *RXI;  // Passed to the Init() function
 **	Given a block of word values, return an array of word ids.
 **
 **	Returns:
-**		An array of word identifiers (integers), zero terminated. The index of
-**		each id matches that of its word.
+**		An array of word identifiers (integers). The [0] value is the size.
 **	Arguments:
 **		series - block of words as values (from REBOL blocks, not strings.)
 **	Note:
 **		Word identifiers are persistent, and you can use them anytime.
+**		The block can include any kind of word, including set-words, lit-words, etc.
+**		If the input block contains non-words, they will be skipped.
 **		The array is allocated with OS_MAKE and you can OS_FREE it any time.
 */
 
@@ -169,12 +210,12 @@ RXILIB *RXI;  // Passed to the Init() function
 **	Given an array of word ids, return the index of the given word.
 **
 **	Returns:
-**		The index of the given word or zero. (??)
+**		The index of the given word or zero.
 **	Arguments:
-**		words - an array like that returned from MAP_WORDS
+**		words - a word array like that returned from MAP_WORDS (first element is size)
 **		word - a word id
 **	Note:
-**		Zeroth word? remove this funct?
+**		The first element of the word array is the length of the array.
 */
 
 #define RXI_SERIES_INFO(a,b)        RXI->series_info(a,b)
@@ -187,11 +228,7 @@ RXILIB *RXI;  // Passed to the Init() function
 **		Returns information related to a series.
 **	Arguments:
 **		series - any series pointer (string or block)
-**		what - indicates what information to return:
-**			RXI_INFO_TAIL: the length of the series	
-**			RXI_INFO_SIZE: total size of series (in elements)
-**			RXI_INFO_WIDE: the width in bytes of each element
-**			RXI_INFO_LEFT: number of unallocated elements available
+**		what - indicates what information to return (see enum)
 */
 
 #define RXI_GET_CHAR(a,b)           RXI->get_char(a,b)
@@ -307,6 +344,8 @@ RXILIB *RXI;  // Passed to the Init() function
 
 extern void *RXI_make_block(u32 size);
 extern void *RXI_make_string(u32 size, int unicode);
+extern void *RXI_make_image(u32 width, u32 height);
+extern void RXI_gc_protect(REBSER *series, BOOL protect);
 extern int RXI_get_string(REBSER *series, u32 index, void **str);
 extern u32 RXI_map_word(REBYTE *string);
 extern u32 *RXI_map_words(REBSER *series);
@@ -325,6 +364,8 @@ RXILIB Ext_Lib = {
 	RXI_VERSION,
 	RXI_make_block,
 	RXI_make_string,
+	RXI_make_image,
+	RXI_gc_protect,
 	RXI_get_string,
 	RXI_map_word,
 	RXI_map_words,

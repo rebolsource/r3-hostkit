@@ -66,11 +66,11 @@ extern REBINT Show_Gob(REBGOB *gob);
 {
 	switch (cmd) {
 
-	case CMD_SHOW:
+	case CMD_GRAPHICS_SHOW:
 		Show_Gob((REBGOB*)RXA_SERIES(frm, 1));
 		break;
 
-	case CMD_INIT_GRAPHICS:
+	case CMD_GRAPHICS_INIT:
 		Gob_Root = (REBGOB*)RXA_SERIES(frm, 1); // system/view/screen-gob
 		Gob_Root->size.x = (REBD32)GetSystemMetrics(SM_CXSCREEN);
 		Gob_Root->size.y = (REBD32)GetSystemMetrics(SM_CYSCREEN);
@@ -93,15 +93,15 @@ extern REBINT Show_Gob(REBGOB *gob);
 {
 	switch (cmd) {
 
-	case CMD_BOX:
+	case CMD_DRAW_BOX:
 		agg_box(data, RXA_PAIR(frm, 1), RXA_PAIR(frm, 2), 0);
 		break;
 
-	case CMD_CIRCLE:
+	case CMD_DRAW_CIRCLE:
 		agg_circle(data, RXA_PAIR(frm, 1), RXA_PAIR(frm, 2));
 		break;
 
-	case CMD_LINES:
+	case CMD_DRAW_LINES:
 		{
 			RXIARG val;
 			REBCNT type;
@@ -119,11 +119,11 @@ extern REBINT Show_Gob(REBGOB *gob);
 		}
 		break;
 
-	case CMD_PEN:
+	case CMD_DRAW_PEN:
 		agg_pen(data, RXA_TUPLE(frm, 1)+1, 0);
 		break;
 
-	case CMD_FILL_PEN:
+	case CMD_DRAW_FILL_PEN:
 		agg_fill_pen(data, RXA_TUPLE(frm, 1)+1);
 		break;
 

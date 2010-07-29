@@ -32,8 +32,13 @@ typedef union rxi_arg_val {
 		REBD32 dec32b;
 	};
 	struct {
-		u32 index;
 		void *series;
+		u32 index;
+	};
+	struct {
+		void *image;
+		int width:16;
+		int height:16;
 	};
 } RXIARG;
 
@@ -64,6 +69,10 @@ typedef int (*RXICAL)(int cmd, RXIFRM *args, void *data);
 #define RXA_OBJECT(f,n)	(RXA_ARG(f,n).addr)
 #define RXA_MODULE(f,n)	(RXA_ARG(f,n).addr)
 #define RXA_HANDLE(f,n)	(RXA_ARG(f,n).addr)
+#define RXA_IMAGE(f,n)	(RXA_ARG(f,n).image)
+#define RXA_IMAGE_BITS(f,n)	  ((REBYTE *)RXI_SERIES_INFO((RXA_ARG(f,n).image), RXI_SER_DATA))
+#define RXA_IMAGE_WIDTH(f,n)  (RXA_ARG(f,n).width)
+#define RXA_IMAGE_HEIGHT(f,n) (RXA_ARG(f,n).height)
 
 
 // Command function return values:
@@ -82,10 +91,11 @@ enum rxi_return {
 
 // Used with RXI_SERIES_INFO:
 enum {
-	RXI_INFO_TAIL,	// series tail index
-	RXI_INFO_SIZE,	// size of series (in units)
-	RXI_INFO_WIDE,	// width of series (in bytes)
-	RXI_INFO_LEFT,	// units free in series (past tail)
+	RXI_SER_TAIL,	// series tail index (length of data)
+	RXI_SER_DATA,	// pointer to data
+	RXI_SER_SIZE,	// size of series (in units)
+	RXI_SER_WIDE,	// width of series (in bytes)
+	RXI_SER_LEFT,	// units free in series (past tail)
 };
 
 // Include the library interface:

@@ -6,8 +6,8 @@ REBOL [
 	; Run make-host-ext.r to convert to host-ext-graphics.h
 ]
 
-init-graphics: command [
-	"Initialize graphics subsystem."
+init: command [
+	"Initialize graphics subsystem (needs to not be exported!)."
 	gob [gob!] "The screen gob (root gob)"
 ]
 

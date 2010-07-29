@@ -122,13 +122,13 @@ emit-file: func [
 		insert exports words
 	]
 
-	foreach word words [emit [tab "CMD_" form-name word  ",^/"]]
+	foreach word words [emit [tab "CMD_" prefix #"_" form-name word  ",^/"]]
 	emit "};^/^/"
 
 	if src: select source to-set-word 'words [
 		emit ["enum " name "_words {^/"]
 		emit [tab "W_" prefix "_0,^/"]
-		foreach word src [emit [tab "W_" prefix "_" form-name word ",^/"]]
+		foreach word src [emit [tab "W_" prefix #"_" form-name word ",^/"]]
 		emit "};^/^/"
 	]
 	write rejoin [%../include/ file %.h] out

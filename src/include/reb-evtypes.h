@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: Event Types
-**  Build: A102
-**  Date:  29-Jul-2010/15:04:12-7:00
+**  Build: A103
+**  Date:  19-Aug-2010/20:35:22-7:00
 **  File:  reb-evtypes.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-boot.r)
@@ -20,6 +20,7 @@ enum event_types {
     EVT_IGNORE,
     EVT_INTERRUPT,
     EVT_DEVICE,
+    EVT_CALLBACK,
     EVT_CUSTOM,
     EVT_ERROR,
     EVT_INIT,

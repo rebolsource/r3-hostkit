@@ -18,7 +18,7 @@ typedef struct rebol_event {
 	u8  type;		// event id (mouse-move, mouse-button, etc)
 	u8  flags;		// special flags
 	u8  win;		// window id
-	u8  info;		// other info
+	u8  model;		// port, object, gui, callback
 	u32 data;		// an x/y position or keycode (raw/decoded)
 	union {
 		REBREQ *req;	// request (for device events)
@@ -29,14 +29,21 @@ typedef struct rebol_event {
 // Special event flags:
 
 enum {
-	EVF_NO_REQ,		// request field not used (e.g. GUI)
+	EVF_COPIED,		// event data has been copied
+	EVF_HAS_XY,		// map-event will work on it
 	EVF_DOUBLE,		// double click detected
 	EVF_CONTROL,
 	EVF_SHIFT,
-	EVF_IS_PORT,
-	EVF_IS_OBJ,
-	EVF_COPIED,		// event data has been copied
-	EVF_HAS_XY,		// map-event will work on it
+};
+
+
+// Event port data model
+
+enum {
+	EVM_PORT,
+	EVM_OBJECT,
+	EVM_GUI,
+	EVM_CALLBACK,
 };
 
 // Special messages

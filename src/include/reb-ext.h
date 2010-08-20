@@ -42,6 +42,10 @@ typedef union rxi_arg_val {
 	};
 } RXIARG;
 
+// For direct access to arg array:
+#define RXI_COUNT(a)	(a[0].bytes[0])
+#define RXI_TYPE(a,n)	(a[0].bytes[n])
+
 // Command function call frame:
 typedef struct rxi_cmd_frame {
 	RXIARG args[8];	// arg values (64 bits each)
@@ -49,10 +53,10 @@ typedef struct rxi_cmd_frame {
 
 typedef int (*RXICAL)(int cmd, RXIFRM *args, void *data);
 
-// Access macros:
+// Access macros (indirect access via RXIFRM pointer):
 #define RXA_ARG(f,n)	((f)->args[n])
-#define RXA_COUNT(f)	(RXA_ARG(f,0).bytes[0])
-#define RXA_TYPE(f,n)	(RXA_ARG(f,0).bytes[n])
+#define RXA_COUNT(f)	(RXA_ARG(f,0).bytes[0]) // number of args
+#define RXA_TYPE(f,n)	(RXA_ARG(f,0).bytes[n]) // types (of first 7 args)
 #define RXA_REF(f,n)	(RXA_ARG(f,n).int32a)
 
 #define RXA_INT64(f,n)	(RXA_ARG(f,n).int64)
@@ -73,7 +77,6 @@ typedef int (*RXICAL)(int cmd, RXIFRM *args, void *data);
 #define RXA_IMAGE_BITS(f,n)	  ((REBYTE *)RXI_SERIES_INFO((RXA_ARG(f,n).image), RXI_SER_DATA))
 #define RXA_IMAGE_WIDTH(f,n)  (RXA_ARG(f,n).width)
 #define RXA_IMAGE_HEIGHT(f,n) (RXA_ARG(f,n).height)
-
 
 // Command function return values:
 enum rxi_return {
@@ -96,6 +99,32 @@ enum {
 	RXI_SER_SIZE,	// size of series (in units)
 	RXI_SER_WIDE,	// width of series (in bytes)
 	RXI_SER_LEFT,	// units free in series (past tail)
+};
+
+// Error Codes (returned in result value from some API functions):
+enum {
+	RXE_NO_ERROR,
+	RXE_NO_WORD,	// the word cannot be found (e.g. in an object)
+	RXE_NOT_FUNC,	// the value is not a function (for callback)
+	RXE_BAD_ARGS,	// function arguments to not match
+};
+
+#define SET_EXT_ERROR(v,n) ((v)->int32a = (n))
+#define GET_EXT_ERROR(v)   ((v)->int32a)
+
+typedef struct rxi_callback_info {
+	u32 flags;		
+	REBSER *obj;	// object that holds the function
+	u32 word;		// word id for function (name)
+	RXIARG *args;	// argument list for function
+	RXIARG result;	// result from function
+} RXICBI;
+
+enum {
+	RXC_NONE,
+	RXC_ASYNC,		// async callback
+	RXC_QUEUED,		// pending in event queue
+	RXC_DONE,		// call completed, structs can be freed
 };
 
 // Include the library interface:

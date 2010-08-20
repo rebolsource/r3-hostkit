@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: REBOL Interface Library
-**  Build: A101
-**  Date:  21-Jul-2010/12:15:34-7:00
+**  Build: A102
+**  Date:  13-Aug-2010/15:36:26-7:00
 **  File:  rebol-lib.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-headers.r)

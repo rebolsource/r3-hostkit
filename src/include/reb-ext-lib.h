@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: REBOL Extension API
-**  Build: A102
-**  Date:  29-Jul-2010/15:04:11-7:00
+**  Build: A103
+**  Date:  19-Aug-2010/20:35:21-7:00
 **  File:  reb-ext-lib.r
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-ext-lib.r)
@@ -36,6 +36,7 @@ typedef struct rebol_ext_api {
 	u32 *(*words_of_object)(REBSER *obj);
 	int (*get_field)(REBSER *obj, u32 word, RXIARG *val);
 	int (*set_field)(REBSER *obj, u32 word, RXIARG val, int type);
+	int (*callback)(RXICBI *cbi);
 } RXILIB;
 
 //** Included by extension ********************************************
@@ -156,7 +157,7 @@ RXILIB *RXI;  // Passed to the Init() function
 /*
 **	u32 RXI_map_word(REBYTE *string)
 **
-**	Given a word as a string, return its word identifier.
+**	Given a word as a string, return its global word identifier.
 **
 **	Returns:
 **		The word identifier that matches the string.
@@ -175,7 +176,7 @@ RXILIB *RXI;  // Passed to the Init() function
 **	Given a block of word values, return an array of word ids.
 **
 **	Returns:
-**		An array of word identifiers (integers). The [0] value is the size.
+**		An array of global word identifiers (integers). The [0] value is the size.
 **	Arguments:
 **		series - block of words as values (from REBOL blocks, not strings.)
 **	Note:
@@ -189,12 +190,12 @@ RXILIB *RXI;  // Passed to the Init() function
 /*
 **	REBYTE *RXI_word_string(u32 word)
 **
-**	Return a string related to a given word identifier.
+**	Return a string related to a given global word identifier.
 **
 **	Returns:
 **		A copy of the word string, null terminated.
 **	Arguments:
-**		word - a word identifier
+**		word - a global word identifier
 **	Note:
 **		The result is a null terminated copy of the name for your own use.
 **		The string is always UTF-8 encoded (chars > 127 are encoded.)
@@ -274,7 +275,7 @@ RXILIB *RXI;  // Passed to the Init() function
 **		Datatype of value or zero if index is past tail.
 **	Arguments:
 **		series - block series pointer
-**		index - word identifier (integer)
+**		index - global word identifier (integer)
 **		val  - gets set to the value of the field
 */
 
@@ -288,7 +289,7 @@ RXILIB *RXI;  // Passed to the Init() function
 **		TRUE if index past end and value was appended to tail of block.
 **	Arguments:
 **		series - block series pointer
-**		index - word identifier (integer)
+**		index - global word identifier (integer)
 **		val  - new value for field
 **		type - datatype of value
 */
@@ -318,7 +319,7 @@ RXILIB *RXI;  // Passed to the Init() function
 **		Datatype of value or zero if word is not found in the object.
 **	Arguments:
 **		obj  - object pointer (e.g. from RXA_OBJECT)
-**		word - word identifier (integer)
+**		word - global word identifier (integer)
 **		val  - gets set to the value of the field
 */
 
@@ -332,9 +333,37 @@ RXILIB *RXI;  // Passed to the Init() function
 **		The type arg, or zero if word not found in object or if field is protected.
 **	Arguments:
 **		obj  - object pointer (e.g. from RXA_OBJECT)
-**		word - word identifier (integer)
+**		word - global word identifier (integer)
 **		val  - new value for field
 **		type - datatype of value
+*/
+
+#define RXI_CALLBACK(a)             RXI->callback(a)
+/*
+**	int RXI_callback(RXICBI *cbi)
+**
+**	Evaluate a REBOL callback function, either synchronous or asynchronous.
+**
+**	Returns:
+**		Sync callback: type of the result; async callback: true if queued
+**	Arguments:
+**		cbi - callback information:
+**			- special option flags
+**			- object pointer (where function is located)
+**			- function name as global word identifier (within above object)
+**			- argument list passed to callback (see notes below)
+**			- result value
+**	Description:
+**		The flag value will determine the type of callback. It can be either
+**		synchronous, where the code will re-enter the interpreter environment
+**		and call the specified function, or asynchronous where an EVT_CALLBACK
+**		event is queued, and the callback will be evaluated later when events
+**		are processed within the interpreter's environment.
+**
+**		For asynchronous callbacks, the cbi and the args array must be managed
+**		because the data isn't processed until the callback event is
+**		handled. Therefore, these cannot be allocated locally on
+**		the C stack; they should be dynamic (or global if so desired.)
 */
 
 
@@ -359,6 +388,7 @@ extern int RXI_set_value(REBSER *series, u32 index, RXIARG val, int type);
 extern u32 *RXI_words_of_object(REBSER *obj);
 extern int RXI_get_field(REBSER *obj, u32 word, RXIARG *val);
 extern int RXI_set_field(REBSER *obj, u32 word, RXIARG val, int type);
+extern int RXI_callback(RXICBI *cbi);
 
 RXILIB Ext_Lib = {
 	RXI_VERSION,
@@ -379,6 +409,7 @@ RXILIB Ext_Lib = {
 	RXI_words_of_object,
 	RXI_get_field,
 	RXI_set_field,
+	RXI_callback,
 };
 
 #endif

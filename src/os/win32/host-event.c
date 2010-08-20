@@ -97,7 +97,7 @@ static void Add_Event_XY(REBGOB *gob, REBINT id, REBINT xy, REBINT flags)
 
 	evt.type  = id;
 	evt.flags = (u8) (flags | (1<<EVF_HAS_XY));
-	evt.info = 0;
+	evt.model = EVM_GUI;
 	evt.data  = xy;
 	evt.ser = (void*)gob;
 
@@ -110,7 +110,7 @@ static void Add_Event_Key(REBGOB *gob, REBINT id, REBINT key, REBINT flags)
 
 	evt.type  = id;
 	evt.flags = flags;
-	evt.info = 0;
+	evt.model = EVM_GUI;
 	evt.data  = key;
 	evt.ser = (void*)gob;
 
@@ -131,7 +131,7 @@ static void Add_File_Events(REBGOB *gob, REBINT flags, HDROP drop)
 
 	evt.type  = EVT_DROP_FILE;
 	evt.flags = (u8) (flags | (1<<EVF_HAS_XY));
-	evt.info = 0;
+	evt.model = EVM_GUI;
 	evt.data = xy.x | xy.y<<16;
 
 
@@ -167,7 +167,7 @@ static Check_Modifiers(REBINT flags)
 ***********************************************************************/
 {
 	REBGOB *gob;
-	REBCNT flags = 1 << EVF_NO_REQ; // (because no device request field)
+	REBCNT flags = 0;
 	REBCNT i;
 	REBCNT mw_num_lines;  // mouse wheel lines setting
 	// In order to trace resizing, we need these state variables. It is

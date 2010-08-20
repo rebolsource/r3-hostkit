@@ -62,6 +62,11 @@ extern void Init_Windows(void);
 extern void Init_Graphics(void);
 #endif
 
+//#define TEST_EXTENSIONS
+#ifdef TEST_EXTENSIONS
+extern void Init_Ext_Test(void);	// see: host-ext-test.c
+#endif
+
 // Host bare-bones stdio functs:
 void Open_StdIO(void);
 void Put_Str(char *buf);
@@ -70,48 +75,6 @@ REBYTE *Get_Str();
 void Host_Crash(REBYTE *reason) {
 	OS_Crash("REBOL host failure", reason);
 }
-
-
-/***********************************************************************
-**
-**  Example Embedded Extension
-**  See: http://www.rebol.com/r3/docs/concepts/extensions-embedded.html
-**
-***********************************************************************/
-
-//#define EXT_EXAMPLE
-#ifdef EXT_EXAMPLE
-
-char *RX_Spec =
-    "REBOL [\n"
-        "Title: {Hosted extension}\n"
-		"Name: hosted\n"
-        "Type: extension\n"
-        "Exports: [add3 mul3 tsto]\n"
-    "]\n"
-    "add3: command [a b c]\n"
-    "mul3: command [a b c]\n"
-	"vers: command [{Returns version field from object.} obj [object!]]\n"
-;
-
-RXIEXT int RX_Call(int cmd, RXIFRM *frm, void *data) {
-	switch (cmd) {
-	case 0:
-		RXA_INT64(frm, 1) = RXA_INT64(frm, 1) + RXA_INT64(frm, 2) + RXA_INT64(frm, 3);
-		break;
-	case 1:
-		RXA_INT64(frm, 1) = RXA_INT64(frm, 1) * RXA_INT64(frm, 2) * RXA_INT64(frm, 3);
-		break;
-	case 2:
-		RXA_TYPE(frm, 1) = RXI_GET_FIELD(RXA_OBJECT(frm, 1), RXI_MAP_WORD("version"), &RXA_ARG(frm, 1));
-		break;
-	default:
-		return RXR_NO_COMMAND;
-	}
-    return RXR_VALUE;
-}
-
-#endif
 
 
 /***********************************************************************
@@ -173,8 +136,8 @@ int main(int argc, char **argv)
 	Init_Graphics();
 #endif
 
-#ifdef EXT_EXAMPLE
-	Reb_Extend(&RX_Spec[0], &RX_Call);
+#ifdef TEST_EXTENSIONS
+	Init_Ext_Test();
 #endif
 
 	// Initialize host bundled source code:

@@ -224,6 +224,7 @@ static int Poll_Default(REBDEV *dev)
 	CLEARS(&evt);
 
 	evt.type = (REBYTE)type;
+	evt.model = EVM_PORT;
 	evt.req  = req;
 	if (type == EVT_ERROR) evt.data = req->error;
 

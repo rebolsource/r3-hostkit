@@ -25,3 +25,4 @@
 #include "reb-filereq.h"
 
 #include "reb-gob.h"
+#include "reb-lib.h"

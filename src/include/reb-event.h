@@ -40,10 +40,11 @@ enum {
 // Event port data model
 
 enum {
-	EVM_PORT,
-	EVM_OBJECT,
-	EVM_GUI,
-	EVM_CALLBACK,
+	EVM_DEVICE,		// I/O request holds the port pointer
+	EVM_PORT,		// event holds port pointer
+	EVM_OBJECT,		// event holds object frame pointer
+	EVM_GUI,		// GUI event uses system/view/event/port
+	EVM_CALLBACK,	// Callback event uses system/ports/callback port
 };
 
 // Special messages

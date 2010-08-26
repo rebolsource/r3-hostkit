@@ -1,8 +1,8 @@
 REBOL 3 Host-Kit Source Distribution
 From REBOL Technologies in Ukiah, California
 
-    Version: 2.100.103.0.0  (alpha)
-    Updated: 19-Aug-2010/20:35:57-7:00 
+    Version: 2.100.104.0.0  (alpha)
+    Updated: 26-Aug-2010/20:41:49-7:00 
 
 The purpose of the R3 Host-Kit is to provide developers with a method of
 building custom versions of REBOL, including built-in extension modules.

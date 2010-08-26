@@ -43,9 +43,7 @@
 #include <string.h>
 
 #include "reb-host.h"
-
 #include "host-lib.h"
-#include "rebol-lib.h"
 
 
 /***********************************************************************
@@ -224,11 +222,11 @@ static int Poll_Default(REBDEV *dev)
 	CLEARS(&evt);
 
 	evt.type = (REBYTE)type;
-	evt.model = EVM_PORT;
+	evt.model = EVM_DEVICE;
 	evt.req  = req;
 	if (type == EVT_ERROR) evt.data = req->error;
 
-	Reb_Event(&evt);	// (returns 0 if queue is full, ignored)
+	RL_Event(&evt);	// (returns 0 if queue is full, ignored)
 }
 
 

@@ -126,6 +126,3 @@ enum {
 	RXC_QUEUED,		// pending in event queue
 	RXC_DONE,		// call completed, structs can be freed
 };
-
-// Include the library interface:
-#include "reb-ext-lib.h"

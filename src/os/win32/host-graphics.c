@@ -29,7 +29,7 @@
 
 #include "reb-host.h"
 #include "host-lib.h" 
-#include "rebol-lib.h"
+
 #include "agg-draw.h"
 #include "host-ext-graphics.h"
 #include "host-ext-draw.h"
@@ -51,7 +51,7 @@ extern REBINT Show_Gob(REBGOB *gob);
 **
 ***********************************************************************/
 {
-	Reb_Do_Commands(block, graphics);
+	RL_Do_Commands(block, graphics);
 	return 0;
 }
 
@@ -108,7 +108,7 @@ extern REBINT Show_Gob(REBGOB *gob);
 			REBCNT n;
 			REBSER blk = RXA_SERIES(frm, 1);
 
-			for (n = 0; type = RXI_GET_VALUE(blk, n, &val); n++) {
+			for (n = 0; type = RL_GET_VALUE(blk, n, &val); n++) {
 				if (type == RXT_PAIR) {
 					if (n > 0)
 						agg_add_vertex(data, val.pair);
@@ -143,8 +143,8 @@ extern REBINT Show_Gob(REBGOB *gob);
 **
 ***********************************************************************/
 {
-	RXI = Reb_Extend((REBYTE *)(&RX_graphics[0]), &RXD_Graphics);
-	Reb_Extend((REBYTE *)(&RX_draw[0]), &RXD_Draw);
+	RXI = RL_Extend((REBYTE *)(&RX_graphics[0]), &RXD_Graphics);
+	RL_Extend((REBYTE *)(&RX_draw[0]), &RXD_Draw);
 }
 
 

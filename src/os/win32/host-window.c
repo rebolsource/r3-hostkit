@@ -34,7 +34,6 @@
 
 #include "reb-host.h"
 #include "host-lib.h" 
-#include "rebol-lib.h"
 
 #ifndef NO_COMPOSITOR
 #include "agg-compositor.h"

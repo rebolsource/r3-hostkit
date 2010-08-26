@@ -6,19 +6,32 @@
 **
 ************************************************************************
 **
-**  Title: REBOL Extension API
-**  Build: A103
-**  Date:  19-Aug-2010/20:35:21-7:00
+**  Title: REBOL Host and Extension API
+**  Build: A104
+**  Date:  26-Aug-2010/20:40:59-7:00
 **  File:  reb-ext-lib.r
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-ext-lib.r)
 **
 ***********************************************************************/
 
-#define RXI_VERSION 1
+#define RXI_VERS 2
 
 typedef struct rebol_ext_api {
-	int version;
+	//int version;
+	void (*version)(REBYTE vers[]);
+	int (*init)(REBARGS *rargs, void *lib);
+	int (*start)(int reserved);
+	void (*reset)();
+	void *(*extend)(REBYTE *source, RXICAL call);
+	void (*escape)(REBINT reserved);
+	int (*do_string)(REBYTE *text);
+	int (*do_binary)(REBYTE *bin, REBINT length, REBCNT flags, REBCNT key);
+	void (*print)(REBYTE *fmt, ...);
+	void (*print_tos)(REBCNT flags, REBYTE *marker);
+	int (*event)(REBEVT *evt);
+	void *(*get_series)(REBSER *ser, REBINT what);
+	void (*do_commands)(REBSER *blk, void *data);
 	void *(*make_block)(u32 size);
 	void *(*make_string)(u32 size, int unicode);
 	void *(*make_image)(u32 width, u32 height);
@@ -39,10 +52,6 @@ typedef struct rebol_ext_api {
 	int (*callback)(RXICBI *cbi);
 } RXILIB;
 
-//** Included by extension ********************************************
-
-#ifndef RXI_API
-
 #ifdef TO_WIN32
 #define RXIEXT __declspec(dllexport)
 #else
@@ -57,9 +66,119 @@ RXILIB *RXI;  // Passed to the Init() function
 
 // Use these macros to access the API library functions:
 
-#define RXI_MAKE_BLOCK(a)           RXI->make_block(a)
+#define RL_VERSION(a)               RXI->version(a)
 /*
-**	void *RXI_make_block(u32 size)
+**	void RL_Version(REBYTE vers[])
+**
+***********************************************************************/
+
+#define RL_INIT(a,b)                RXI->init(a,b)
+/*
+**	int RL_Init(REBARGS *rargs, void *lib)
+**
+**		REBOL_HOST_LIB *lib
+**
+***********************************************************************/
+
+#define RL_START(a)                 RXI->start(a)
+/*
+**	int RL_Start(int reserved)
+**
+***********************************************************************/
+
+#define RL_RESET()                  RXI->reset()
+/*
+**	void RL_Reset()
+**
+**		Reset REBOL. Currently only resets the stack.
+**
+***********************************************************************/
+
+#define RL_EXTEND(a,b)              RXI->extend(a,b)
+/*
+**	void *RL_Extend(REBYTE *source, RXICAL call)
+**
+**		Adds a boot extension to the system/catalog/boot-exts list.
+**		Later in the boot, these are used with LOAD-EXTENSION to
+**		query and potentially init each extension (depending on flag.)
+**
+***********************************************************************/
+
+#define RL_ESCAPE(a)                RXI->escape(a)
+/*
+**	void RL_Escape(REBINT reserved)
+**
+**		Signal that escape is needed. Can be CTRL-C or ESCAPE.
+**
+***********************************************************************/
+
+#define RL_DO_STRING(a)             RXI->do_string(a)
+/*
+**	int RL_Do_String(REBYTE *text)
+**
+**		Text must be valid UTF-8.
+**		Returns TRUE if ran ok.
+**
+***********************************************************************/
+
+#define RL_DO_BINARY(a,b,c,d)       RXI->do_binary(a,b,c,d)
+/*
+**	int RL_Do_Binary(REBYTE *bin, REBINT length, REBCNT flags, REBCNT key)
+**
+**		Run a binary encoded script form such as compressed text.
+**
+**		Also include: rebin, cloaked, signed, and encrypted formats.
+**		Returns TRUE if ran ok.
+**
+***********************************************************************/
+
+#define RL_PRINT(a,b)               RXI->print(a,b)
+/*
+**	void RL_Print(REBYTE *fmt, ...)
+**
+***********************************************************************/
+
+#define RL_PRINT_TOS(a,b)           RXI->print_tos(a,b)
+/*
+**	void RL_Print_TOS(REBCNT flags, REBYTE *marker)
+**
+**		Print top of stack value. (Actually it is TOS+1).
+**		Marker is usually "==" to show output.
+**
+***********************************************************************/
+
+#define RL_EVENT(a)                 RXI->event(a)
+/*
+**	int RL_Event(REBEVT *evt)
+**
+**		Appends an application event (e.g. GUI) to the event port.
+**		Sets signal to get REBOL attention for WAIT and awake.
+**		Returns 0 if queue is full.
+**
+**		To avoid environment problems, this function only appends
+**		to the event queue (no auto-expand). So if the queue is full
+**		an error will be returned. If the event is a CLOSE or other
+**		high-importance signal, the signal will be raised here.
+**
+***********************************************************************/
+
+#define RL_GET_SERIES(a,b)          RXI->get_series(a,b)
+/*
+**	void *RL_Get_Series(REBSER *ser, REBINT what)
+**
+**		Returns information about a series: data, length
+**
+***********************************************************************/
+
+#define RL_DO_COMMANDS(a,b)         RXI->do_commands(a,b)
+/*
+**	void RL_Do_Commands(REBSER *blk, void *data)
+**
+***********************************************************************/
+
+#define RL_MAKE_BLOCK(a)            RXI->make_block(a)
+/*
+**	void *RL_Make_Block(u32 size)
 **
 **	Allocate a new block.
 **
@@ -76,9 +195,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		However, you can lock blocks to prevent deallocation. (?? default)
 */
 
-#define RXI_MAKE_STRING(a,b)        RXI->make_string(a,b)
+#define RL_MAKE_STRING(a,b)         RXI->make_string(a,b)
 /*
-**	void *RXI_make_string(u32 size, int unicode)
+**	void *RL_Make_String(u32 size, int unicode)
 **
 **	Allocate a new string.
 **
@@ -97,9 +216,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		However, you can lock strings to prevent deallocation. (?? default)
 */
 
-#define RXI_MAKE_IMAGE(a,b)         RXI->make_image(a,b)
+#define RL_MAKE_IMAGE(a,b)          RXI->make_image(a,b)
 /*
-**	void *RXI_make_image(u32 width, u32 height)
+**	void *RL_Make_Image(u32 width, u32 height)
 **
 **	Allocate a new image of the given size.
 **
@@ -114,9 +233,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		no references to them from REBOL code (C code does nothing.)
 */
 
-#define RXI_GC_PROTECT(a,b)         RXI->gc_protect(a,b)
+#define RL_GC_PROTECT(a,b)          RXI->gc_protect(a,b)
 /*
-**	void RXI_gc_protect(REBSER *series, BOOL protect)
+**	void RL_GC_Protect(REBSER *series, BOOL protect)
 **
 **	Protect memory from garbage collection.
 **
@@ -135,9 +254,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		find them, such as in an existing block or object (variable).
 */
 
-#define RXI_GET_STRING(a,b,c)       RXI->get_string(a,b,c)
+#define RL_GET_STRING(a,b,c)        RXI->get_string(a,b,c)
 /*
-**	int RXI_get_string(REBSER *series, u32 index, void **str)
+**	int RL_Get_String(REBSER *series, u32 index, void **str)
 **
 **	Obtain a pointer into a string (bytes or unicode).
 **
@@ -153,9 +272,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		to make a copy of the string if needed.
 */
 
-#define RXI_MAP_WORD(a)             RXI->map_word(a)
+#define RL_MAP_WORD(a)              RXI->map_word(a)
 /*
-**	u32 RXI_map_word(REBYTE *string)
+**	u32 RL_Map_Word(REBYTE *string)
 **
 **	Given a word as a string, return its global word identifier.
 **
@@ -169,9 +288,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		it will be added and the new word identifier is returned.
 */
 
-#define RXI_MAP_WORDS(a)            RXI->map_words(a)
+#define RL_MAP_WORDS(a)             RXI->map_words(a)
 /*
-**	u32 *RXI_map_words(REBSER *series)
+**	u32 *RL_Map_Words(REBSER *series)
 **
 **	Given a block of word values, return an array of word ids.
 **
@@ -186,9 +305,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		The array is allocated with OS_MAKE and you can OS_FREE it any time.
 */
 
-#define RXI_WORD_STRING(a)          RXI->word_string(a)
+#define RL_WORD_STRING(a)           RXI->word_string(a)
 /*
-**	REBYTE *RXI_word_string(u32 word)
+**	REBYTE *RL_Word_String(u32 word)
 **
 **	Return a string related to a given global word identifier.
 **
@@ -204,9 +323,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		The string is allocated with OS_MAKE and you can OS_FREE it any time.
 */
 
-#define RXI_FIND_WORD(a,b)          RXI->find_word(a,b)
+#define RL_FIND_WORD(a,b)           RXI->find_word(a,b)
 /*
-**	u32 RXI_find_word(u32 *words, u32 word)
+**	u32 RL_Find_Word(u32 *words, u32 word)
 **
 **	Given an array of word ids, return the index of the given word.
 **
@@ -219,9 +338,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		The first element of the word array is the length of the array.
 */
 
-#define RXI_SERIES_INFO(a,b)        RXI->series_info(a,b)
+#define RL_SERIES_INFO(a,b)         RXI->series_info(a,b)
 /*
-**	int RXI_series_info(REBSER *series, REBCNT what)
+**	int RL_Series_Info(REBSER *series, REBCNT what)
 **
 **	Get series information.
 **
@@ -232,9 +351,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		what - indicates what information to return (see enum)
 */
 
-#define RXI_GET_CHAR(a,b)           RXI->get_char(a,b)
+#define RL_GET_CHAR(a,b)            RXI->get_char(a,b)
 /*
-**	int RXI_get_char(REBSER *series, u32 index)
+**	int RL_Get_Char(REBSER *series, u32 index)
 **
 **	Get a character from byte or unicode string.
 **
@@ -250,9 +369,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		R3 build options. The default is 16 bits.
 */
 
-#define RXI_SET_CHAR(a,b,c)         RXI->set_char(a,b,c)
+#define RL_SET_CHAR(a,b,c)          RXI->set_char(a,b,c)
 /*
-**	u32 RXI_set_char(REBSER *series, u32 index, u32 chr)
+**	u32 RL_Set_Char(REBSER *series, u32 index, u32 chr)
 **
 **	Set a character into a byte or unicode string.
 **
@@ -265,9 +384,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **			will be appended.
 */
 
-#define RXI_GET_VALUE(a,b,c)        RXI->get_value(a,b,c)
+#define RL_GET_VALUE(a,b,c)         RXI->get_value(a,b,c)
 /*
-**	int RXI_get_value(REBSER *series, u32 index, RXIARG *val)
+**	int RL_Get_Value(REBSER *series, u32 index, RXIARG *val)
 **
 **	Get a value from a block.
 **
@@ -279,9 +398,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		val  - gets set to the value of the field
 */
 
-#define RXI_SET_VALUE(a,b,c,d)      RXI->set_value(a,b,c,d)
+#define RL_SET_VALUE(a,b,c,d)       RXI->set_value(a,b,c,d)
 /*
-**	int RXI_set_value(REBSER *series, u32 index, RXIARG val, int type)
+**	int RL_Set_Value(REBSER *series, u32 index, RXIARG val, int type)
 **
 **	Set a value in a block.
 **
@@ -294,9 +413,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		type - datatype of value
 */
 
-#define RXI_WORDS_OF_OBJECT(a)      RXI->words_of_object(a)
+#define RL_WORDS_OF_OBJECT(a)       RXI->words_of_object(a)
 /*
-**	u32 *RXI_words_of_object(REBSER *obj)
+**	u32 *RL_Words_Of_Object(REBSER *obj)
 **
 **	Returns information about the object.
 **
@@ -309,9 +428,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		The array is allocated with OS_MAKE and you can OS_FREE it any time.
 */
 
-#define RXI_GET_FIELD(a,b,c)        RXI->get_field(a,b,c)
+#define RL_GET_FIELD(a,b,c)         RXI->get_field(a,b,c)
 /*
-**	int RXI_get_field(REBSER *obj, u32 word, RXIARG *val)
+**	int RL_Get_Field(REBSER *obj, u32 word, RXIARG *val)
 **
 **	Get a field value (context variable) of an object.
 **
@@ -323,9 +442,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		val  - gets set to the value of the field
 */
 
-#define RXI_SET_FIELD(a,b,c,d)      RXI->set_field(a,b,c,d)
+#define RL_SET_FIELD(a,b,c,d)       RXI->set_field(a,b,c,d)
 /*
-**	int RXI_set_field(REBSER *obj, u32 word, RXIARG val, int type)
+**	int RL_Set_Field(REBSER *obj, u32 word, RXIARG val, int type)
 **
 **	Set a field (context variable) of an object.
 **
@@ -338,9 +457,9 @@ RXILIB *RXI;  // Passed to the Init() function
 **		type - datatype of value
 */
 
-#define RXI_CALLBACK(a)             RXI->callback(a)
+#define RL_CALLBACK(a)              RXI->callback(a)
 /*
-**	int RXI_callback(RXICBI *cbi)
+**	int RL_Callback(RXICBI *cbi)
 **
 **	Evaluate a REBOL callback function, either synchronous or asynchronous.
 **
@@ -367,49 +486,38 @@ RXILIB *RXI;  // Passed to the Init() function
 */
 
 
-#else
+#ifdef REB_LIB  // direct calls to REBOL library functions
 
-//** Included by REBOL ************************************************
-
-extern void *RXI_make_block(u32 size);
-extern void *RXI_make_string(u32 size, int unicode);
-extern void *RXI_make_image(u32 width, u32 height);
-extern void RXI_gc_protect(REBSER *series, BOOL protect);
-extern int RXI_get_string(REBSER *series, u32 index, void **str);
-extern u32 RXI_map_word(REBYTE *string);
-extern u32 *RXI_map_words(REBSER *series);
-extern REBYTE *RXI_word_string(u32 word);
-extern u32 RXI_find_word(u32 *words, u32 word);
-extern int RXI_series_info(REBSER *series, REBCNT what);
-extern int RXI_get_char(REBSER *series, u32 index);
-extern u32 RXI_set_char(REBSER *series, u32 index, u32 chr);
-extern int RXI_get_value(REBSER *series, u32 index, RXIARG *val);
-extern int RXI_set_value(REBSER *series, u32 index, RXIARG val, int type);
-extern u32 *RXI_words_of_object(REBSER *obj);
-extern int RXI_get_field(REBSER *obj, u32 word, RXIARG *val);
-extern int RXI_set_field(REBSER *obj, u32 word, RXIARG val, int type);
-extern int RXI_callback(RXICBI *cbi);
-
-RXILIB Ext_Lib = {
-	RXI_VERSION,
-	RXI_make_block,
-	RXI_make_string,
-	RXI_make_image,
-	RXI_gc_protect,
-	RXI_get_string,
-	RXI_map_word,
-	RXI_map_words,
-	RXI_word_string,
-	RXI_find_word,
-	RXI_series_info,
-	RXI_get_char,
-	RXI_set_char,
-	RXI_get_value,
-	RXI_set_value,
-	RXI_words_of_object,
-	RXI_get_field,
-	RXI_set_field,
-	RXI_callback,
-};
+RL_API void RL_Version(REBYTE vers[]);
+RL_API int RL_Init(REBARGS *rargs, void *lib);
+RL_API int RL_Start(int reserved);
+RL_API void RL_Reset();
+RL_API void *RL_Extend(REBYTE *source, RXICAL call);
+RL_API void RL_Escape(REBINT reserved);
+RL_API int RL_Do_String(REBYTE *text);
+RL_API int RL_Do_Binary(REBYTE *bin, REBINT length, REBCNT flags, REBCNT key);
+RL_API void RL_Print(REBYTE *fmt, ...);
+RL_API void RL_Print_TOS(REBCNT flags, REBYTE *marker);
+RL_API int RL_Event(REBEVT *evt);
+RL_API void *RL_Get_Series(REBSER *ser, REBINT what);
+RL_API void RL_Do_Commands(REBSER *blk, void *data);
+RL_API void *RL_Make_Block(u32 size);
+RL_API void *RL_Make_String(u32 size, int unicode);
+RL_API void *RL_Make_Image(u32 width, u32 height);
+RL_API void RL_GC_Protect(REBSER *series, BOOL protect);
+RL_API int RL_Get_String(REBSER *series, u32 index, void **str);
+RL_API u32 RL_Map_Word(REBYTE *string);
+RL_API u32 *RL_Map_Words(REBSER *series);
+RL_API REBYTE *RL_Word_String(u32 word);
+RL_API u32 RL_Find_Word(u32 *words, u32 word);
+RL_API int RL_Series_Info(REBSER *series, REBCNT what);
+RL_API int RL_Get_Char(REBSER *series, u32 index);
+RL_API u32 RL_Set_Char(REBSER *series, u32 index, u32 chr);
+RL_API int RL_Get_Value(REBSER *series, u32 index, RXIARG *val);
+RL_API int RL_Set_Value(REBSER *series, u32 index, RXIARG val, int type);
+RL_API u32 *RL_Words_Of_Object(REBSER *obj);
+RL_API int RL_Get_Field(REBSER *obj, u32 word, RXIARG *val);
+RL_API int RL_Set_Field(REBSER *obj, u32 word, RXIARG val, int type);
+RL_API int RL_Callback(RXICBI *cbi);
 
 #endif

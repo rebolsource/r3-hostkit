@@ -34,8 +34,6 @@
 
 #include "reb-host.h"
 #include "host-lib.h"
-#include "rebol-lib.h"
-
 
 char *RX_Spec =
 	"REBOL [\n"
@@ -102,7 +100,7 @@ REBCNT Test_Sync_Callback(REBSER *obj, REBCNT word, RXIARG *result)
 
 	args[1].int64 = 123;
 
-	n = RXI_CALLBACK(&cbi);
+	n = RL_CALLBACK(&cbi);
 
 	*result = cbi.result;
 	return n;
@@ -132,7 +130,7 @@ REBCNT Test_Async_Callback(REBSER *obj, REBCNT word)
 
 	args[1].int64 = 123;
 
-	n = RXI_CALLBACK(cbi); // result is in cbi struct, if wanted
+	n = RL_CALLBACK(cbi); // result is in cbi struct, if wanted
 
 	return n;
 }
@@ -157,18 +155,18 @@ RXIEXT int RX_Call(int cmd, RXIFRM *frm, void *data) {
 		break;
 
 	case 3:
-		RXA_WORD(frm, 1) = RXI_MAP_WORD("system"); //?? is frame always long enough??
+		RXA_WORD(frm, 1) = RL_MAP_WORD("system"); //?? is frame always long enough??
 		RXA_TYPE(frm, 1) = RXT_WORD;
 		break;
 
 	case 4:
-		RXI_GET_STRING(RXA_SERIES(frm, 1), 0, (void*)(&str)); // latin-1 only for test
-		RXA_WORD(frm, 1) = RXI_MAP_WORD(str);
+		RL_GET_STRING(RXA_SERIES(frm, 1), 0, (void*)(&str)); // latin-1 only for test
+		RXA_WORD(frm, 1) = RL_MAP_WORD(str);
 		RXA_TYPE(frm, 1) = RXT_WORD;
 		break;
 
 	case 5:
-		RXA_TYPE(frm, 1) = RXI_GET_FIELD(RXA_OBJECT(frm, 1), RXA_WORD(frm, 2), &RXA_ARG(frm, 1));
+		RXA_TYPE(frm, 1) = RL_GET_FIELD(RXA_OBJECT(frm, 1), RXA_WORD(frm, 2), &RXA_ARG(frm, 1));
 		break;
 
 	case 6:
@@ -189,5 +187,5 @@ RXIEXT int RX_Call(int cmd, RXIFRM *frm, void *data) {
 
 void Init_Ext_Test(void)
 {
-	RXI = Reb_Extend(&RX_Spec[0], &RX_Call);
+	RXI = RL_Extend(&RX_Spec[0], &RX_Call);
 }

@@ -6,7 +6,7 @@
 extern "C" void Blit_Rect(REBGOB *gob, REBPAR d, REBPAR dsize, REBYTE *src, REBPAR s, REBPAR ssize);
 //extern "C" void* Rich_Text;
 //extern "C" void* Effects;
-extern "C" void *Reb_Get_Series(REBSER *ser, REBINT what);
+extern "C" void *RL_Get_Series(REBSER *ser, REBINT what);
 
 namespace agg
 {

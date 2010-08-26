@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: Extension Types (Isolators)
-**  Build: A103
-**  Date:  19-Aug-2010/20:35:22-7:00
+**  Build: A104
+**  Date:  26-Aug-2010/20:40:59-7:00
 **  File:  ext-types.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-boot.r)

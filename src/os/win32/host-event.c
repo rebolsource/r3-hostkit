@@ -45,7 +45,6 @@
 
 #include "reb-host.h"
 #include "host-lib.h"
-#include "rebol-lib.h"
 
 //***** Constants *****
 
@@ -101,7 +100,7 @@ static void Add_Event_XY(REBGOB *gob, REBINT id, REBINT xy, REBINT flags)
 	evt.data  = xy;
 	evt.ser = (void*)gob;
 
-	Reb_Event(&evt);	// returns 0 if queue is full
+	RL_Event(&evt);	// returns 0 if queue is full
 }
 
 static void Add_Event_Key(REBGOB *gob, REBINT id, REBINT key, REBINT flags)
@@ -114,7 +113,7 @@ static void Add_Event_Key(REBGOB *gob, REBINT id, REBINT key, REBINT flags)
 	evt.data  = key;
 	evt.ser = (void*)gob;
 
-	Reb_Event(&evt);	// returns 0 if queue is full
+	RL_Event(&evt);	// returns 0 if queue is full
 }
 
 static void Add_File_Events(REBGOB *gob, REBINT flags, HDROP drop)
@@ -145,7 +144,7 @@ static void Add_File_Events(REBGOB *gob, REBINT flags, HDROP drop)
 		buf[len] = 0;
 		// ?! convert to REBOL format? E.g.: evt.ser = OS_To_REBOL_File(buf, &len);
 		OS_Free(buf);
-		if (!Reb_Event(&evt)) break;	// queue is full
+		if (!RL_Event(&evt)) break;	// queue is full
 	}
 }
 

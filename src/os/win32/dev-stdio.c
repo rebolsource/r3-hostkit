@@ -54,7 +54,7 @@ static BOOL Redir_Inp = 0;
 
 // Special access:
 extern REBDEV *Devices[];
-extern REBOL_API void Reb_Escape(int level);
+
 
 //**********************************************************************
 
@@ -62,7 +62,7 @@ BOOL WINAPI Handle_Break(DWORD dwCtrlType)
 {
 	// Handle the MS CMD console CTRL-C, BREAK, and other events:
 	if (dwCtrlType >= CTRL_CLOSE_EVENT) OS_Exit(100); // close button, shutdown, etc.
-	Reb_Escape(0);
+	RL_Escape(0);
 	return TRUE;	// We handled it
 }
 

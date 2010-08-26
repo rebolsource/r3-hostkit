@@ -69,7 +69,7 @@ void *Term_IO;
 void Handle_Signal(int sig)
 {
 	Put_Str("[escape]");
-	Reb_Escape(0);
+	RL_Escape(0);
 }
 
 void Init_Signals(void)

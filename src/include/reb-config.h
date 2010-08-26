@@ -132,12 +132,16 @@
 #define OS_CRLF FALSE
 #endif
 
+#ifdef REBOL_HOST
+#define REB_LIB
+#endif
+
 #ifdef REBOL_ONLY
-#define REBOL_API				// REBOL stand-alone test version
+#define RL_API
 #else
 #ifdef REBOL_EXPORTS
-#define REBOL_API API_EXPORT	// for REBOL library build
+#define RL_API API_EXPORT	// for REBOL library build
 #else
-#define REBOL_API API_IMPORT	// for host files when DLL used
+#define RL_API API_IMPORT	// for host files when DLL used
 #endif
 #endif // REBOL_ONLY

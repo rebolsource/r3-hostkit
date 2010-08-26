@@ -42,7 +42,8 @@
 
 #include "reb-host.h"		// standard host include files
 #include "host-lib.h"		// OS host library (dispatch table)
-#include "rebol-lib.h"		// REBOL library (function prototypes)
+
+//#include "rebol-lib.h"		// REBOL library (function prototypes)
 
 #include "host-init.c"
 
@@ -121,13 +122,13 @@ int main(int argc, char **argv)
 	Parse_Args(argc, argv, &Main_Args);
 
 	vers[0] = 5; // len
-	Reb_Version(&vers[0]);
+	RL_Version(&vers[0]);
 
 	Open_StdIO();  // also sets up interrupt handler
 
 	// Initialize the REBOL library:
 	if (!Host_Lib) Host_Crash("Missing host lib");
-	n = Reb_Init(&Main_Args, Host_Lib);
+	n = RL_Init(&Main_Args, Host_Lib);
 	if (n == 1) Host_Crash("REBOL DLL wrong size");
 	if (n == 2) Host_Crash("REBOL DLL wrong version/checksum");
 
@@ -141,10 +142,10 @@ int main(int argc, char **argv)
 #endif
 
 	// Initialize host bundled source code:
-	Reb_Do_Binary((REBYTE *)(&Reb_Init_Code[0]), REB_INIT_SIZE, 0, 0);
+	RL_Do_Binary((REBYTE *)(&Reb_Init_Code[0]), REB_INIT_SIZE, 0, 0);
 
 	// Run REBOL's mezzanine bootstrap:
-	n = (Main_Args.options & RO_NO_BOOT) ? TRUE : Reb_Start(0); // TRUE on halt
+	n = (Main_Args.options & RO_NO_BOOT) ? TRUE : RL_Start(0); // TRUE on halt
 
 	// Console line input loop (just an example, can be improved):
 	if (
@@ -155,8 +156,8 @@ int main(int argc, char **argv)
 		while (TRUE) {
 			Put_Str(PROMPT_STR);
 			if ((line = Get_Str())) {
-				Reb_Do_String(line);
-				Reb_Print_TOS(0, RESULT_STR);
+				RL_Do_String(line);
+				RL_Print_TOS(0, RESULT_STR);
 				OS_Free(line);
 			}
 			else break; // EOS

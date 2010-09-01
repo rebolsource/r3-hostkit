@@ -1,3 +1,6 @@
+//REBOL stuff
+#include "reb-host.h"
+
 //basic api
 #include "agg_scanline_p.h"
 #include "agg_scanline_u.h"
@@ -60,20 +63,21 @@
 #include "agg_blur.h"
 
 //REBOL stuff
-#include "reb-config.h"
-#include "reb-c.h"
-#include "reb-defs.h"
-#include "reb-gob.h"
-#undef IS_ERROR
+// #include "reb-config.h"
+// #include "reb-c.h"
+// #include "reb-defs.h"
+// #include "reb-gob.h"
+// #undef IS_ERROR
 
 namespace agg
 {
+  #include "host-ext-draw.h"
 
 	template<class VertexSource>
 	double* getVertices(VertexSource& pth, unsigned p, double c = 0){
 		path_storage tmp;
 		tmp.add_path(pth,p);
-		
+
 		double* vertices = new double[tmp.total_vertices() * 2];
 		double x;
 		double y;
@@ -94,7 +98,7 @@ namespace agg
 	{
 	   color_key(rgba8 key) :  c(key) {}
 #ifdef ENDIAN_BIG
-	   void operator() (int8u* argb) 
+	   void operator() (int8u* argb)
 	   {
 		  if(argb[1] == c.r && argb[2] == c.g && argb[3] == c.b)
 		  {
@@ -105,7 +109,7 @@ namespace agg
 		  }
 	   }
 #else
-	   void operator() (int8u* bgra) 
+	   void operator() (int8u* bgra)
 	   {
 		  if(bgra[0] == c.b && bgra[1] == c.g && bgra[2] == c.r)
 		  {
@@ -129,7 +133,7 @@ namespace agg
 		virtual void mode(int mode) = 0;
 	};
 
-	template<class GradientF> 
+	template<class GradientF>
 	class gradient_polymorphic_wrapper : public gradient_polymorphic_wrapper_base
 	{
 	public:
@@ -138,9 +142,9 @@ namespace agg
 		{
 			if (d==0) d=1; // protect from divide by zero in repeat and reflect cases
 			switch (m_mode) {
-				case 1: //repeat
+				case W_DRAW_REPEAT: //repeat
 					return m_repeat_adaptor.calculate(x, y, d);
-				case 2: //reflect
+				case W_DRAW_REFLECT: //reflect
 					return m_reflect_adaptor.calculate(x, y, d);
 				default: //normal
 				return m_gradient.calculate(x, y, d);
@@ -166,16 +170,16 @@ namespace agg
 
 		static unsigned size() { return 256; }
 		const rgba8& operator [] (unsigned v) const
-		{ 
-			return m_colors[v]; 
+		{
+			return m_colors[v];
 		}
 
 		const rgba8* m_colors;
 	};
 
-	
+
 	enum render_types
-	{   
+	{
 		RT_NONE = 0,
 		RT_FILL,
 		RT_GORAUD,
@@ -185,30 +189,30 @@ namespace agg
 		RT_TEXT,
 		RT_EFFECT,
 		RT_CLIPPING
-			
+
 	};
-	
+
 	enum filter_types
-	{   
+	{
 		FT_NEAREST = 0,
 		FT_BILINEAR,
 		FT_BICUBIC,
 		FT_GAUSSIAN
 	};
-	
+
 	enum filter_modes
-	{   
+	{
 		FM_NORMAL = 0,
 		FM_RESAMPLE
 	};
-	
+
 	enum pattern_modes
-	{   
+	{
 		PM_NORMAL = 0,
 		PM_REPEAT,
 		PM_REFLECT
 	};
-	
+
 
 	// Basic path attributes
 	struct path_attributes {
@@ -429,9 +433,11 @@ namespace agg
 		void agg_curve4 (double x1, double y1, double x2,  double y2, double x3,  double y3, double x4,  double y4);
 		void agg_end_poly ();
 		void agg_end_bspline (int step, int closed = 0);
-		void agg_end_poly_img(unsigned char *img_buf, int sizX, int sizY, int pw = 0, int ph = 0, int ox = 0, int oy = 0, int outline = 0, int pattern = 0, int r1 = 0, int g1 = 0, int b1 = 0, int a1 = 0);
-		void agg_gtriangle(REBPAR* p1, REBPAR* p2, REBPAR* p3, REBYTE* c1, REBYTE* c2, REBYTE* c3, double d = 0.0);
-		void agg_image(unsigned char *img_buf, double oftX, double oftY, int sizX, int sizY, int outline = 0, int r1 = 0, int g1 = 0, int b1 = 0, int a1 = 0);//, double ang, int ctrX, int ctrY);
+		void agg_end_poly_img(unsigned char *img_buf, int sizX, int sizY); //, int pw = 0, int ph = 0, int ox = 0, int oy = 0, int outline = 0, int pattern = 0, int r1 = 0, int g1 = 0, int b1 = 0, int a1 = 0);
+		void agg_gtriangle(REBXYF p1, REBXYF p2, REBXYF p3, REBYTE* c1, REBYTE* c2, REBYTE* c3, double d = 0.0);
+		void agg_image(unsigned char *img_buf, double oftX, double oftY, int sizX, int sizY); //, int outline = 0, int r1 = 0, int g1 = 0, int b1 = 0, int a1 = 0);//, double ang, int ctrX, int ctrY);
+        void agg_image_options(int r, int g, int b, int a ,int border);
+        void agg_image_pattern(int mode, double x, double y, double w, double h);
 
 		int agg_push_mtx();
 		int agg_pop_mtx();
@@ -445,7 +451,7 @@ namespace agg
 		void agg_dash_cap(line_cap_e mode);
 
 		void agg_effect(REBPAR* p1, REBPAR* p2, REBSER* block);
-		REBINT agg_text(REBINT vectorial, REBPAR* p1, REBPAR* p2, REBSER* block);
+		REBINT agg_text(REBINT vectorial, REBXYF* p1, REBXYF* p2, REBSER* block);
 
 		//PATH sub-commands
         void agg_path_move(int rel, double x, double y);   // M, m
@@ -456,13 +462,13 @@ namespace agg
                     double x,  double y);
         void agg_path_quadratic_curve_to(int rel, double x, double y);    // T, t
         void agg_path_cubic_curve(int rel, double x1, double y1,                   // C, c
-                    double x2, double y2, 
+                    double x2, double y2,
                     double x,  double y);
         void agg_path_cubic_curve_to(int rel, double x2, double y2,                   // S, s
                     double x,  double y);
 		void agg_path_arc(int rel, double rx, double ry,                   // A, a
 							double angle,
-                              int large_arc, 
+                              int large_arc,
                               int sweep,
 							  double x,  double y);
         void agg_path_close();                               // Z, z
@@ -512,7 +518,7 @@ namespace agg
 		interp_persp m_interpolator_persp;
 
 		//gradient stuff
-		unsigned char m_grad_gamma[256]; 
+		unsigned char m_grad_gamma[256];
 		gradient_polymorphic_wrapper_base* m_gradient;
 		gradient_polymorphic_wrapper<gradient_circle>   gr_circle;
 		gradient_polymorphic_wrapper<gradient_diamond>  gr_diamond;
@@ -575,6 +581,15 @@ namespace agg
 		int m_arrow_head;
 		int m_arrow_tail;
 		rgba8 m_arrow_color;
+
+		//image
+		rgba8 m_img_key_color;
+		double m_img_border;
+		double m_pattern_x;
+		double m_pattern_y;
+        double m_pattern_w;
+		double m_pattern_h;
+
 	};
-	
+
 }

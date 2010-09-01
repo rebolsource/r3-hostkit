@@ -7,8 +7,26 @@ REBOL [
 ]
 
 init: command [
-	"Initialize graphics subsystem (needs to not be exported!)."
+	"Initialize graphics subsystem."
 	gob [gob!] "The screen gob (root gob)"
+]
+
+caret-to-offset: command [
+	"Returns the xy offset (pair) for a specific string position in a graphics object."
+	gob [gob!]
+	element [integer! block!] "The position of the string in the richtext block"
+	position [integer! string!] "The position within the string"
+]
+
+cursor: command [
+	"Changes the mouse cursor image."
+	image [integer! image! none!]
+]
+
+offset-to-caret: command [ ;returns pair! instead of the block..needs to be fixed
+	"Returns the richtext block at the string position for an XY offset in the graphics object."
+	gob [gob!]
+	position [pair!]
 ]
 
 show: command [
@@ -16,35 +34,18 @@ show: command [
 	gob [gob! none!]
 ]
 
-;draw: command [
-;	"Renders draw dialect (scalable vector graphics) to an image (returned)."
-;	image [image! pair!] "Image or size of image"
-;	commands [block!] "Draw commands"
-;]
-;
-;cursor: command [
-;	"Changes the mouse cursor image."
-;	image [integer! image! none!]
-;]
-;
-;size-text: command [
-;	"Returns the size of text rendered by a graphics object."
-;	gob [gob!]
-;]
-;
-;caret-to-offset: command [
-;	"Returns the xy offset (pair) for a specific string position in a graphics object."
-;	gob [gob!]
-;	element [block! integer!] "The position of the string in the richtext block"
-;	position [string! integer!] "The position within the string"
-;]
-;
-;offset-to-caret: command [
-;	"Returns the richtext block at the string position for an XY offset in the graphics object."
-;	gob [gob!]
-;	position [pair!]
-;]
-;
+size-text: command [
+	"Returns the size of text rendered by a graphics object."
+	gob [gob!]
+]
+
+draw: command [
+	"Renders draw dialect (scalable vector graphics) to an image (returned)."
+	image [image! pair!] "Image or size of image"
+	commands [block!] "Draw commands"
+]
+
+
 ;#not-yet-used [
 ;
 ;effect: command [

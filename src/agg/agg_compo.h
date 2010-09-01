@@ -3,7 +3,7 @@
 
 extern "C" REBINT Draw_Gob(void *graphics, REBSER *block, REBSER *args);
 //extern "C" REBINT Effect_Gob(void *effects, REBSER *block);
-//extern "C" REBINT Text_Gob(void *graphics, REBSER *gob);
+extern "C" REBINT Text_Gob(void *richtext, REBSER *block);
 
 namespace agg
 {
@@ -50,8 +50,8 @@ namespace agg
 
 			//buffer size
 			int m_width;
-			int m_height; 
-			int m_stride; 
+			int m_height;
+			int m_stride;
 
 			//root gob reference
 			REBGOB* m_rootGob;
@@ -65,7 +65,7 @@ namespace agg
 
 			// clipping info
 			rect m_clip_box;
-			
+
 			REBPAR m_final_oft;
 			REBPAR m_final_siz;
 

@@ -98,7 +98,6 @@ binary-to-c: either system/version/4 = 3 [
 
 write-c-file: func [
 	c-file
-	h-file
 	code
 	/local data comp-data comp-size
 ][
@@ -183,4 +182,4 @@ load-files: func [
 
 code: load-files files
 
-write-c-file dir/host-init.c %include/host-init.h code
+write-c-file %include/host-init.h code

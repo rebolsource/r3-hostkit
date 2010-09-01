@@ -2,8 +2,8 @@
 // Anti-Grain Geometry - Version 2.3
 // Copyright (C) 2002-2005 Maxim Shemanarev (http://www.antigrain.com)
 //
-// Permission to copy, use, modify, sell and distribute this software 
-// is granted provided this copyright notice appears in all copies. 
+// Permission to copy, use, modify, sell and distribute this software
+// is granted provided this copyright notice appears in all copies.
 // This software is provided "as is" without express or implied
 // warranty, and with no claim as to its suitability for any purpose.
 //
@@ -57,9 +57,9 @@ namespace agg
         void pitch_and_family(DWORD p){ m_pitch_and_family = p; }
         void flip_y(bool flip)        { m_flip_y = flip;         }
         void hinting(bool h)          { m_hinting = h;           }
-        bool create_font(const char* typeface_, glyph_rendering ren_type);
+        bool create_font(const wchar_t* typeface_, glyph_rendering ren_type);
 
-        bool create_font(const char* typeface_, 
+        bool create_font(const wchar_t* typeface_,
                          glyph_rendering ren_type,
                          double height_,
                          double width_=0.0,
@@ -84,7 +84,7 @@ namespace agg
         // Accessors
         //--------------------------------------------------------------------
         unsigned    resolution()   const { return m_resolution; }
-        const char* typeface()     const { return m_typeface;   }
+        const wchar_t* typeface()     const { return m_typeface;   }
         double      height()       const { return m_height;     }
         double      width()        const { return m_width;      }
         int         weight()       const { return m_weight;     }
@@ -132,7 +132,7 @@ namespace agg
         HFONT           m_cur_font;
 
         int             m_change_stamp;
-        char*           m_typeface;
+        wchar_t*        m_typeface;
         unsigned        m_typeface_len;
         char*           m_signature;
         unsigned        m_height;
@@ -175,7 +175,7 @@ namespace agg
 
 
     //------------------------------------------------font_engine_win32_tt_int16
-    // This class uses values of type int16 (10.6 format) for the vector cache. 
+    // This class uses values of type int16 (10.6 format) for the vector cache.
     // The vector cache is compact, but when rendering glyphs of height
     // more that 200 there integer overflow can occur.
     //
@@ -188,13 +188,13 @@ namespace agg
         typedef font_engine_win32_tt_base::scanlines_aa_type  scanlines_aa_type;
         typedef font_engine_win32_tt_base::scanlines_bin_type scanlines_bin_type;
 
-        font_engine_win32_tt_int16(HDC dc, unsigned max_fonts = 32) : 
+        font_engine_win32_tt_int16(HDC dc, unsigned max_fonts = 32) :
             font_engine_win32_tt_base(false, dc, max_fonts) {}
     };
 
     //------------------------------------------------font_engine_win32_tt_int32
-    // This class uses values of type int32 (26.6 format) for the vector cache. 
-    // The vector cache is twice larger than in font_engine_win32_tt_int16, 
+    // This class uses values of type int32 (26.6 format) for the vector cache.
+    // The vector cache is twice larger than in font_engine_win32_tt_int16,
     // but it allows you to render glyphs of very large sizes.
     //
     class font_engine_win32_tt_int32 : public font_engine_win32_tt_base
@@ -206,7 +206,7 @@ namespace agg
         typedef font_engine_win32_tt_base::scanlines_aa_type  scanlines_aa_type;
         typedef font_engine_win32_tt_base::scanlines_bin_type scanlines_bin_type;
 
-        font_engine_win32_tt_int32(HDC dc, unsigned max_fonts = 32) : 
+        font_engine_win32_tt_int32(HDC dc, unsigned max_fonts = 32) :
             font_engine_win32_tt_base(true, dc, max_fonts) {}
     };
 

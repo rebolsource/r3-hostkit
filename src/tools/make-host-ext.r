@@ -2,8 +2,8 @@ REBOL [
 	Title: "Build REBOL 3.0 Boot Extension Module"
 	Author: "Carl Sassenrath"
 	Purpose: {
-		Collects host-kit extension modules and writes out their
-		source as C files and creates a .h file for their defines.
+		Collects host-kit extension modules and writes them out
+		to a .h file in a compilable data format.
 	}
 ]
 
@@ -43,8 +43,7 @@ to-cstr: either system/version/4 = 3 [
 			append out {"}
 			append out head data
 		]
-		remove head out
-		
+		head out
 	]
 ]
 
@@ -122,7 +121,7 @@ emit-file: func [
 		insert exports words
 	]
 
-	foreach word words [emit [tab "CMD_" prefix #"_" form-name word  ",^/"]]
+	foreach word words [emit [tab "CMD_" prefix #"_" replace/all form-name word "'" "_LIT"  ",^/"]]
 	emit "};^/^/"
 
 	if src: select source to-set-word 'words [
@@ -131,14 +130,18 @@ emit-file: func [
 		foreach word src [emit [tab "W_" prefix #"_" form-name word ",^/"]]
 		emit "};^/^/"
 	]
-	write rejoin [%../include/ file %.h] out
 
-	clear out
-	emit form-header/gen join title " - Module Initialization" second split-path file %make-host-ext.r
+	emit "#ifdef INCLUDE_EXT_DATA^/"
 	data: append trim/head mold/only/flat source newline
 	append data to-char 0 ; null terminator may be required
 	emit ["const unsigned char RX_" name "[] = {^/" to-cstr data "^/};^/^/"]
-	write rejoin [%../os/ file %.c] out
+	emit "#endif^/"
+
+	write rejoin [%../include/ file %.h] out
+
+;	clear out
+;	emit form-header/gen join title " - Module Initialization" second split-path file %make-host-ext.r
+;	write rejoin [%../os/ file %.c] out
 ]
 
 ;-- Create Files -------------------------------------------------------------
@@ -150,4 +153,12 @@ emit-file %host-ext-graphics [
 
 emit-file %host-ext-draw [
 	%../boot/draw.r
+]
+
+emit-file %host-ext-shape [
+	%../boot/shape.r
+]
+
+emit-file %host-ext-text [
+	%../boot/text.r
 ]

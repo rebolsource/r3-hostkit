@@ -2,8 +2,8 @@
 // Anti-Grain Geometry - Version 2.3
 // Copyright (C) 2002-2005 Maxim Shemanarev (http://www.antigrain.com)
 //
-// Permission to copy, use, modify, sell and distribute this software 
-// is granted provided this copyright notice appears in all copies. 
+// Permission to copy, use, modify, sell and distribute this software
+// is granted provided this copyright notice appears in all copies.
 // This software is provided "as is" without express or implied
 // warranty, and with no claim as to its suitability for any purpose.
 //
@@ -13,12 +13,12 @@
 //          http://www.antigrain.com
 //----------------------------------------------------------------------------
 //
-// Adaptation for 32-bit screen coordinates (scanline32_u) has been sponsored by 
+// Adaptation for 32-bit screen coordinates (scanline32_u) has been sponsored by
 // Liberty Technology Systems, Inc., visit http://lib-sys.com
 //
 // Liberty Technology Systems, Inc. is the provider of
 // PostScript and PDF technology for software developers.
-// 
+//
 //----------------------------------------------------------------------------
 
 #ifndef AGG_SCANLINE_U_INCLUDED
@@ -32,22 +32,22 @@ namespace agg
     //
     // Unpacked scanline container class
     //
-    // This class is used to transfer data from a scanline rasterizer 
-    // to the rendering buffer. It's organized very simple. The class stores 
-    // information of horizontal spans to render it into a pixel-map buffer. 
-    // Each span has staring X, length, and an array of bytes that determine the 
-    // cover-values for each pixel. 
-    // Before using this class you should know the minimal and maximal pixel 
+    // This class is used to transfer data from a scanline rasterizer
+    // to the rendering buffer. It's organized very simple. The class stores
+    // information of horizontal spans to render it into a pixel-map buffer.
+    // Each span has staring X, length, and an array of bytes that determine the
+    // cover-values for each pixel.
+    // Before using this class you should know the minimal and maximal pixel
     // coordinates of your scanline. The protocol of using is:
     // 1. reset(min_x, max_x)
-    // 2. add_cell() / add_span() - accumulate scanline. 
+    // 2. add_cell() / add_span() - accumulate scanline.
     //    When forming one scanline the next X coordinate must be always greater
     //    than the last stored one, i.e. it works only with ordered coordinates.
     // 3. Call finalize(y) and render the scanline.
     // 3. Call reset_spans() to prepare for the new scanline.
-    //    
+    //
     // 4. Rendering:
-    // 
+    //
     // Scanline provides an iterator class that allows you to extract
     // the spans and the cover values for each pixel. Be aware that clipping
     // has not been done yet, so you should perform it yourself.
@@ -61,10 +61,10 @@ namespace agg
     // ************************************
     //
     // scanline_u8::const_iterator span = sl.begin();
-    // 
-    // unsigned char* row = m_rbuf->row(y); // The the address of the beginning 
+    //
+    // unsigned char* row = m_rbuf->row(y); // The the address of the beginning
     //                                      // of the current row
-    // 
+    //
     // unsigned num_spans = sl.num_spans(); // Number of spans. It's guaranteed that
     //                                      // num_spans is always greater than 0.
     //
@@ -75,7 +75,7 @@ namespace agg
     //
     //     int num_pix = span->len;              // Number of pixels of the span.
     //                                           // Always greater than 0, still it's
-    //                                           // better to use "int" instead of 
+    //                                           // better to use "int" instead of
     //                                           // "unsigned" because it's more
     //                                           // convenient for clipping
     //     int x = span->x;
@@ -86,24 +86,24 @@ namespace agg
     //     **************************************
     //
     //     unsigned char* dst = row + x;  // Calculate the start address of the row.
-    //                                    // In this case we assume a simple 
+    //                                    // In this case we assume a simple
     //                                    // grayscale image 1-byte per pixel.
     //     do
     //     {
-    //         *dst++ = *covers++;        // Hypotetical rendering. 
+    //         *dst++ = *covers++;        // Hypotetical rendering.
     //     }
     //     while(--num_pix);
     //
     //     ++span;
-    // } 
+    // }
     // while(--num_spans);  // num_spans cannot be 0, so this loop is quite safe
     //------------------------------------------------------------------------
     //
     // The question is: why should we accumulate the whole scanline when we
     // could render just separate spans when they're ready?
-    // That's because using the scanline is generally faster. When is consists 
+    // That's because using the scanline is generally faster. When is consists
     // of more than one span the conditions for the processor cash system
-    // are better, because switching between two different areas of memory 
+    // are better, because switching between two different areas of memory
     // (that can be very large) occurs less frequently.
     //------------------------------------------------------------------------
     template<class CoverT> class scanline_u
@@ -154,7 +154,7 @@ namespace agg
             }
             m_last_x        = 0x7FFFFFF0;
             m_min_x         = min_x;
-            m_cur_span      = m_spans;
+            m_cur_span      = &m_spans[0];
         }
 
         //--------------------------------------------------------------------
@@ -171,7 +171,7 @@ namespace agg
                 m_cur_span++;
                 m_cur_span->x      = (coord_type)(x + m_min_x);
                 m_cur_span->len    = 1;
-                m_cur_span->covers = m_covers + x;
+                m_cur_span->covers = &m_covers[x];
             }
             m_last_x = x;
         }
@@ -180,7 +180,7 @@ namespace agg
         void add_cells(int x, unsigned len, const CoverT* covers)
         {
             x -= m_min_x;
-            memcpy(m_covers + x, covers, len * sizeof(CoverT));
+            memcpy(&m_covers[x], covers, len * sizeof(CoverT));
             if(x == m_last_x+1)
             {
                 m_cur_span->len += (coord_type)len;
@@ -190,7 +190,7 @@ namespace agg
                 m_cur_span++;
                 m_cur_span->x      = (coord_type)(x + m_min_x);
                 m_cur_span->len    = (coord_type)len;
-                m_cur_span->covers = m_covers + x;
+                m_cur_span->covers = &m_covers[x];
             }
             m_last_x = x + len - 1;
         }
@@ -199,7 +199,7 @@ namespace agg
         void add_span(int x, unsigned len, unsigned cover)
         {
             x -= m_min_x;
-            memset(m_covers + x, cover, len);
+            memset(&m_covers[x], cover, len);
             if(x == m_last_x+1)
             {
                 m_cur_span->len += (coord_type)len;
@@ -209,29 +209,29 @@ namespace agg
                 m_cur_span++;
                 m_cur_span->x      = (coord_type)(x + m_min_x);
                 m_cur_span->len    = (coord_type)len;
-                m_cur_span->covers = m_covers + x;
+                m_cur_span->covers = &m_covers[x];
             }
             m_last_x = x + len - 1;
         }
 
         //--------------------------------------------------------------------
-        void finalize(int y) 
-        { 
-            m_y = y; 
+        void finalize(int y)
+        {
+            m_y = y;
         }
 
         //--------------------------------------------------------------------
         void reset_spans()
         {
             m_last_x    = 0x7FFFFFF0;
-            m_cur_span  = m_spans;
+            m_cur_span  = &m_spans[0];
         }
 
         //--------------------------------------------------------------------
         int      y()           const { return m_y; }
-        unsigned num_spans()   const { return unsigned(m_cur_span - m_spans); }
-        const_iterator begin() const { return m_spans + 1; }
-        iterator       begin()       { return m_spans + 1; }
+        unsigned num_spans()   const { return unsigned(m_cur_span - &m_spans[0]); }
+        const_iterator begin() const { return &m_spans[1]; }
+        iterator       begin()       { return &m_spans[1]; }
 
     private:
         scanline_u(const self_type&);
@@ -260,11 +260,11 @@ namespace agg
 
 
     //=============================================================scanline_am
-    // 
+    //
     // The scanline container with alpha-masking
-    // 
+    //
     //------------------------------------------------------------------------
-    template<class AlphaMask, class CoverT> 
+    template<class AlphaMask, class CoverT>
     class scanline_am : public scanline_u<CoverT>
     {
     public:
@@ -286,9 +286,9 @@ namespace agg
                 unsigned count = scanline_type::num_spans();
                 do
                 {
-                    m_alpha_mask->combine_hspan(span->x, 
-                                                scanline_type::y(), 
-                                                span->covers, 
+                    m_alpha_mask->combine_hspan(span->x,
+                                                scanline_type::y(),
+                                                span->covers,
                                                 span->len);
                     ++span;
                 }
@@ -302,7 +302,7 @@ namespace agg
 
 
     //==========================================================scanline_u8_am
-    template<class AlphaMask> 
+    template<class AlphaMask>
     class scanline_u8_am : public scanline_am<AlphaMask, int8u>
     {
     public:
@@ -418,7 +418,7 @@ namespace agg
             }
             else
             {
-                m_spans.add(span(coord_type(x + m_min_x), 1, m_covers + x));
+                m_spans.add(span(coord_type(x + m_min_x), 1, &m_covers[x]));
             }
             m_last_x = x;
         }
@@ -427,14 +427,14 @@ namespace agg
         void add_cells(int x, unsigned len, const cover_type* covers)
         {
             x -= m_min_x;
-            memcpy(m_covers + x, covers, len * sizeof(cover_type));
+            memcpy(&m_covers[x], covers, len * sizeof(cover_type));
             if(x == m_last_x+1)
             {
                 m_spans.last().len += coord_type(len);
             }
             else
             {
-                m_spans.add(span(coord_type(x + m_min_x), coord_type(len), m_covers + x));
+                m_spans.add(span(coord_type(x + m_min_x), coord_type(len), &m_covers[x]));
             }
             m_last_x = x + len - 1;
         }
@@ -443,22 +443,22 @@ namespace agg
         void add_span(int x, unsigned len, unsigned cover)
         {
             x -= m_min_x;
-            memset(m_covers + x, cover, len);
+            memset(&m_covers[x], cover, len);
             if(x == m_last_x+1)
             {
                 m_spans.last().len += coord_type(len);
             }
             else
             {
-                m_spans.add(span(coord_type(x + m_min_x), coord_type(len), m_covers + x));
+                m_spans.add(span(coord_type(x + m_min_x), coord_type(len), &m_covers[x]));
             }
             m_last_x = x + len - 1;
         }
 
         //--------------------------------------------------------------------
-        void finalize(int y) 
-        { 
-            m_y = y; 
+        void finalize(int y)
+        {
+            m_y = y;
         }
 
         //--------------------------------------------------------------------
@@ -501,11 +501,11 @@ namespace agg
 
 
     //===========================================================scanline32_am
-    // 
+    //
     // The scanline container with alpha-masking
-    // 
+    //
     //------------------------------------------------------------------------
-    template<class AlphaMask, class CoverT> 
+    template<class AlphaMask, class CoverT>
     class scanline32_am : public scanline32_u<CoverT>
     {
     public:
@@ -527,9 +527,9 @@ namespace agg
                 unsigned count = scanline_type::num_spans();
                 do
                 {
-                    m_alpha_mask->combine_hspan(span->x, 
-                                                scanline_type::y(), 
-                                                span->covers, 
+                    m_alpha_mask->combine_hspan(span->x,
+                                                scanline_type::y(),
+                                                span->covers,
                                                 span->len);
                     ++span;
                 }
@@ -543,7 +543,7 @@ namespace agg
 
 
     //========================================================scanline32_u8_am
-    template<class AlphaMask> 
+    template<class AlphaMask>
     class scanline32_u8_am : public scanline32_am<AlphaMask, int8u>
     {
     public:

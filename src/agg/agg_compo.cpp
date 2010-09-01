@@ -1,12 +1,12 @@
 #include "agg_compo.h"
 //include "agg_effects.h"
-//include "agg_truetype_text.h"
+#include "agg_truetype_text.h"
 
-//extern "C" void Reb_Print(REBYTE *fmt, ...);//output just for testing
+//extern "C" void Reb_Print(char *fmt, ...);//output just for testing
 extern "C" void Blit_Rect(REBGOB *gob, REBPAR d, REBPAR dsize, REBYTE *src, REBPAR s, REBPAR ssize);
-//extern "C" void* Rich_Text;
+extern "C" void* Rich_Text;
 //extern "C" void* Effects;
-extern "C" void *RL_Get_Series(REBSER *ser, REBINT what);
+extern "C" void *RL_Series(REBSER *ser, REBINT what);
 
 namespace agg
 {
@@ -43,7 +43,7 @@ namespace agg
 		m_width = GOB_W_INT(winGob);
 		m_height = GOB_H_INT(winGob);
 		m_stride = 4 * m_width;
-		
+
 		int buflen = m_width * m_height * 4;
 		m_buf = new REBYTE [buflen];
 		memset(m_buf, 200, buflen);
@@ -54,7 +54,7 @@ namespace agg
 		m_width = w;
 		m_height = h;
 		m_stride = 4 * w;
-		
+
 		m_buf = buf;
 		memset(m_buf, 200, w * h * 4);
 	}
@@ -125,7 +125,7 @@ namespace agg
 					return result;
 				}
 			}
-				
+
 		}
 		return 0;
 	}
@@ -219,7 +219,7 @@ namespace agg
 			//GOB changed offset or size, rerender the old position area
 
 			REBPAR winOft;
-			
+
 			REBINT obx = oox + osx;
 			REBINT oby = ooy + osy;
 
@@ -395,8 +395,8 @@ namespace agg
 		if (result < 0) return result;
 
 /*
-							HDC hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL); 
-							HDC hdcCompatible = CreateCompatibleDC(hdcScreen); 
+							HDC hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL);
+							HDC hdcCompatible = CreateCompatibleDC(hdcScreen);
 							HBITMAP bm = CreateCompatibleBitmap(hdcScreen, m_width,m_height);
 							SetBitmapBits(bm,m_width * m_height * 4,m_buf);
 							SelectObject(hdcCompatible, bm);
@@ -525,7 +525,7 @@ namespace agg
 		m_rb_win(pixf);
 */
 		m_rbuf_win.attach(m_buf + (ox * 4) + (oy * m_stride), sx, sy, m_stride);
-		
+
 		int abs_ox = ox;
 		int abs_oy = oy;
 
@@ -665,15 +665,6 @@ namespace agg
 							if (result < 0) return result;
 						}
 						break;
-#ifdef TEMP_REMOVED
-					case GOBT_EFFECT:
-						{
-//							Reb_Print("GOB EFFECT %dx%d", abs_ox, abs_oy);
-							((agg_effects*)Effects)->init(m_rb_win,m_rbuf_win,tx,ty,abs_ox, abs_oy, GOB_ALPHA(gob));
-							REBINT result = Effect_Gob(Effects, (REBSER *)GOB_CONTENT(gob));
-							if (result < 0) return result;
-						}
-						break;
 					case GOBT_STRING:
 						if (
 							!(
@@ -683,15 +674,15 @@ namespace agg
 						){
 //							Reb_Print("GOB string: %s" ,GOB_STRING(gob));
 							rich_text* rt = (rich_text*)Rich_Text;
-							
+
 							rt->rt_reset();
 							rt->rt_attach_buffer(&m_rbuf_win, tx, ty, ox, oy);
 
-							rt->rt_set_text((char *)GOB_STRING(gob));
+							rt->rt_set_text((REBCHR*)GOB_STRING(gob), TRUE);
 							rt->rt_push(1);
 
-							rt->rt_draw_text();
-						}
+							rt->rt_draw_text(DRAW_TEXT);
+                        }
 						break;
 					case GOBT_TEXT:
 //						Reb_Print("GOB block!: %dx%d", tx, ty);
@@ -703,9 +694,19 @@ namespace agg
 						REBINT result = Text_Gob(rt, (REBSER *)GOB_CONTENT(gob));
 
 						rt->rt_draw_text();
-						
+
 						if (result < 0) return result;
 
+						break;
+
+#ifdef TEMP_REMOVED
+					case GOBT_EFFECT:
+						{
+//							Reb_Print("GOB EFFECT %dx%d", abs_ox, abs_oy);
+							((agg_effects*)Effects)->init(m_rb_win,m_rbuf_win,tx,ty,abs_ox, abs_oy, GOB_ALPHA(gob));
+							REBINT result = Effect_Gob(Effects, (REBSER *)GOB_CONTENT(gob));
+							if (result < 0) return result;
+						}
 						break;
 #endif
 				}

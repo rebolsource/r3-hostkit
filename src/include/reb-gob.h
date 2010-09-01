@@ -150,9 +150,9 @@ struct rebol_gob {		// size: 64 bytes!
 #define GOB_TAIL(g)		SERIES_TAIL((g)->pane)
 #define GOB_HEAD(g)		((REBGOB **)(SERIES_DATA(GOB_PANE(g))))
 #else
-#define GOB_STRING(g)	((REBYTE *)RL_Get_Series(GOB_CONTENT(g), 0))
-#define GOB_TAIL(g)		((REBCNT)RL_Get_Series(GOB_PANE(g), 1))
-#define GOB_HEAD(g)		((REBGOB **)RL_Get_Series(GOB_PANE(g), 0))
+#define GOB_STRING(g)	((REBYTE *)RL_Series(GOB_CONTENT(g), RXI_SER_DATA))
+#define GOB_TAIL(g)		((REBCNT)RL_Series(GOB_PANE(g), RXI_SER_TAIL))
+#define GOB_HEAD(g)		((REBGOB **)RL_Series(GOB_PANE(g), RXI_SER_DATA))
 #endif
 #define GOB_BITMAP(g)	GOB_STRING(g)
 #define GOB_SKIP(g,n)	(GOB_HEAD(g)+n)

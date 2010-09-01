@@ -7,7 +7,7 @@
 #include "agg_compo.h"
 #include "agg_truetype_text.h"
 
-//extern "C" void Reb_Print(char *fmt, ...);//output just for testing
+extern "C" void RL_Print(char *fmt, ...);//output just for testing
 namespace agg
 {
 
@@ -21,7 +21,7 @@ namespace agg
 //		m_contour(m_curves)
 	{
 //		m_contour.auto_detect_orientation(false);
-		
+
 		debug = 0;
 
 		m_gren = glyph_ren_native_mono;
@@ -30,14 +30,15 @@ namespace agg
         m_feng.flip_y(true);
 
 		m_hinfo = 0;
-		
+
 		m_color_changed = 0;
 
 		m_font = new font();
 		m_para = new para();
 
 		rt_push();
-	}
+//		Reb_Print("RICH TEXT created!\n");
+    }
 
 	//destructor(can be enhanced)
 	rich_text::~rich_text()
@@ -45,6 +46,7 @@ namespace agg
 		rt_reset();
 		delete m_font;
 		delete m_para;
+//        Reb_Print("RICH TEXT destroyed!\n");
 	}
 
 	text_attributes& rich_text::rt_curr_attributes()
@@ -73,13 +75,30 @@ namespace agg
 
 	void rich_text::rt_reset()
 	{
+//	    Reb_Print("RICH TEXT reset!\n");
 		rt_text_mode(0);
 
 		m_color_changed = 0;
 
+        wchar_t *last_text = 0;
+        wchar_t *last_name = 0;
+        unsigned i;
+		for(i = 0; i < m_text_attributes.size(); i++){
+			text_attributes attr = m_text_attributes[i];
+			if (attr.text != last_text && attr.text_gc == FALSE){
+				delete[] attr.text;
+				last_text = attr.text;
+			}
+			if (attr.name != last_name && !attr.name_gc){
+				delete[] attr.name;
+				last_name = attr.name;
+			}
+		}
+
 		m_text_attributes.remove_all();
 
-		m_font->name = (unsigned char *)"Arial";
+		m_font->name = L"\x0041\x0072\x0069\x0061\x006C"; //"Arial"
+		m_font->name_gc = true;
 		m_font->bold = 0;
 		m_font->italic = 0;
 		m_font->underline = 0;
@@ -110,8 +129,8 @@ namespace agg
 		m_para->indent_y = 0;
 		m_para->scroll_x = 0;
 		m_para->scroll_y = 0;
-		m_para->align = SW_LEFT;
-		m_para->valign = SW_TOP;
+		m_para->align = W_TEXT_LEFT;
+		m_para->valign = W_TEXT_TOP;
 
 		if (m_caret) {
 			delete m_caret;
@@ -121,6 +140,10 @@ namespace agg
 			delete m_hinfo;
 			m_hinfo = 0;
 		}
+
+		m_text = 0;
+
+		rt_push();
 	}
 
 	void rich_text::rt_attach_buffer(ren_buf* img_buf, int w, int h, int x, int y)
@@ -180,7 +203,8 @@ namespace agg
 		attr.bold = m_font->bold;
 		attr.color = rgba8(m_font->color[0],m_font->color[1],m_font->color[2],255 - m_font->color[3]);
 		attr.italic = m_font->italic;
-		attr.name = (char *)(m_font->name);
+		attr.name = m_font->name;
+		attr.name_gc = m_font->name_gc;
 		attr.offset_x = m_font->offset_x;
 		attr.offset_y = m_font->offset_y;
 		attr.shadow_x = m_font->shadow_x;
@@ -210,7 +234,9 @@ namespace agg
 		}
 
 		//push text
-		attr.text = m_text;
+		attr.text = (wchar_t*)m_text;
+		//if set to TRUE don't deallocate text string..REBOL GC will handle it
+		attr.text_gc = m_text_gc;
 	}
 
 
@@ -226,7 +252,8 @@ namespace agg
 		m_font->color[2] = attr.color.b;
 		m_font->color[3] = 255 - attr.color.a;
 		m_font->italic = attr.italic;
-		m_font->name = (unsigned char *)attr.name;
+		m_font->name = attr.name;
+		m_font->name_gc = attr.name_gc;
 		m_font->offset_x = attr.offset_x;
 		m_font->offset_y = attr.offset_y;
 		m_font->shadow_x = attr.shadow_x;
@@ -273,9 +300,10 @@ namespace agg
 		return 0;
 	}
 
-	int rich_text::rt_set_text(char* text)
+	int rich_text::rt_set_text(REBCHR* text, REBCNT gc)
 	{
 		m_text=text;
+		m_text_gc = gc;
 		return 0;
 	}
 
@@ -304,9 +332,9 @@ namespace agg
 			attr.desc = tm.tmDescent - 1;
 			attr.asc = tm.tmAscent;
 
-			//get text height			
+			//get text height
 			SIZE area;
-			GetTextExtentPoint32( m_dc, "N", 1, &area );
+			GetTextExtentPoint32( m_dc, L"\x004E", 1, &area ); //'N'
 			return area.cy;
 		}
 		return 0;
@@ -329,7 +357,8 @@ namespace agg
 				maxSize = attr.size;
 				attrIdx = i;
 			}
-			if (strchr(attr.text,'\n')) break;
+//			if (strchr(attr.text,'\n')) break;
+			if (wcschr(attr.text, L'\x000A')) break; //'\n'
 
 		}
 
@@ -362,17 +391,17 @@ namespace agg
 
 			}
 			if(m_feng.create_font(attr.name, m_gren)){
-				const char* p = attr.text;
+				const wchar_t* p = attr.text;
 				if (init){
 					init = false;
 					p+=offset;
 				}
 				while (*p){
-					if (p[0]=='\n') return width;
-					if ((p[0]==' ') || (p[0]=='\t')) last_width= width;
+					if (p[0]==L'\x000A') return width;
+					if ((p[0]==L'\x0020') || (p[0]==L'\x0009')) last_width= width;
 					const glyph_cache* glyph = m_fman.glyph(*p);
 					if(glyph){
-						if (p[0] == '\t') {
+						if (p[0] == L'\x0009') {
 							int	tab_width = attr.para.tabs;
 							if (tab_width == 0){
 									tab_width = 40;
@@ -385,7 +414,7 @@ namespace agg
 						if ((attr.para.wrap) && (width >= m_wrap_size_x-m_right_hang)){
 							int last_word = width;
 							while(*p){
-								if ((p[0] == ' ') || (p[0] == '\t') || (p[0] == '\n')){
+								if ((p[0] == L'\x0020') || (p[0] == L'\x0009') || (p[0] == L'\x000A')){
 									break;
 								}
 								const glyph_cache* glyph = m_fman.glyph(*p);
@@ -408,7 +437,7 @@ namespace agg
 	}
 
 
-	int rich_text::rt_size_text(REBPAR* size)
+	int rich_text::rt_size_text(REBXYF* size)
 	{
 		m_tmp_val.pair.x = size->x;
 		m_tmp_val.pair.y = size->y;
@@ -424,21 +453,21 @@ namespace agg
 	given screen offset coords sets the offset of caret in text dialect array
 	returns carret info structure for useful text handling
 	--------------------------------------------------------------------*/
-	void rich_text::rt_offset_to_caret(REBPAR* offset, REBINT *element, REBINT *position){
-		m_tmp_val.pair.x = offset->x+1;
-		m_tmp_val.pair.y = offset->y;
+	void rich_text::rt_offset_to_caret(REBXYF offset, REBINT *element, REBINT *position){
+		m_tmp_val.pair.x = offset.x+1;
+		m_tmp_val.pair.y = offset.y;
 		rt_draw_text(OFFSET_TO_CARET);
 		*element = m_tmp_val.pair.x-1;
 		*position = m_tmp_val.pair.y-1;
 	}
 
-	
+
 	/*-------------------------------------------------------------------
 	given the ofset of caret returns screen offset relative to face
 	returns carret info structure for useful text handling
 	--------------------------------------------------------------------*/
 
-	void rich_text::rt_caret_to_offset(REBPAR* offset, REBINT element, REBINT position){
+	void rich_text::rt_caret_to_offset(REBXYF* offset, REBINT element, REBINT position){
 		m_tmp_val.pair.x = element+1;
 		m_tmp_val.pair.y = position;
 		rt_draw_text(CARET_TO_OFFSET);
@@ -450,12 +479,12 @@ namespace agg
 	void rich_text::rt_set_hinfo(hinfo* hinfo)
 	sets text marking(highliting) using the hinfo structure
 	--------------------------------------------------------------------*/
-	void rich_text::rt_set_hinfo(REBPAR* highlightStart, REBPAR* highlightEnd){
+	void rich_text::rt_set_hinfo(REBXYF highlightStart, REBXYF highlightEnd){
 		if (!m_hinfo) m_hinfo = new hinfo();
-		m_hinfo->hStart.x = highlightStart->x;
-		m_hinfo->hStart.y = highlightStart->y;
-		m_hinfo->hEnd.x = highlightEnd->x;
-		m_hinfo->hEnd.y = highlightEnd->y;
+		m_hinfo->hStart.x = highlightStart.x;
+		m_hinfo->hStart.y = highlightStart.y;
+		m_hinfo->hEnd.x = highlightEnd.x;
+		m_hinfo->hEnd.y = highlightEnd.y;
 	}
 
 	/*-------------------------------------------------------------------
@@ -463,6 +492,7 @@ namespace agg
 	sets the text rendering mode (0-aliased,1-antialiased,2-vectorial)
 	--------------------------------------------------------------------*/
 	int rich_text::rt_text_mode(int mode){
+//	    Reb_Print("rt_text_mode: %d\n", mode);
         switch(mode)
         {
 			case 0:
@@ -471,7 +501,7 @@ namespace agg
 				break;
 			case 1:
 				m_gren = glyph_ren_agg_gray8;
-				m_feng.gamma(gamma_power(1.0)); 
+				m_feng.gamma(gamma_power(1.0));
 				break;
 			case 2:
 				m_gren = glyph_ren_outline;
@@ -484,18 +514,18 @@ namespace agg
 
 	/*-------------------------------------------------------------------
 	--------------------------------------------------------------------*/
-	int rich_text::rt_set_caret(REBPAR* offset){
-		if (!m_caret) m_caret = new REBPAR();
-		m_caret->x = offset->x;
-		m_caret->y = offset->y;
+	int rich_text::rt_set_caret(REBXYF offset){
+		if (!m_caret) m_caret = new REBXYF();
+		m_caret->x = offset.x;
+		m_caret->y = offset.y;
 		return 0;
 	};
 
 	/*--------------------------------------------------------------------
 	Scrolls text stored in the attribute stack bypassing the dialect parser.
 	--------------------------------------------------------------------*/
-	int rich_text::rt_scroll(REBPAR* offset){
-		rt_draw_text(DRAW_TEXT, offset);
+	int rich_text::rt_scroll(REBXYF offset){
+		rt_draw_text(DRAW_TEXT, &offset);
 		return 0;
 	}
 
@@ -509,18 +539,18 @@ namespace agg
 
 
 	/*-------------------------------------------------------------------
-	int rich_text::rt_draw_text(int mode, REBPAR* offset)
+	int rich_text::rt_draw_text(int mode, REBXYF offset)
 	main rendering function, the offset is optional (for fast scroll)
 	it is also used for o-t-c and c-t-o computations
 	--------------------------------------------------------------------*/
-	int rich_text::rt_draw_text(int mode, REBPAR* offset)
+	int rich_text::rt_draw_text(int mode, REBXYF* offset)
 	{
 
 		unsigned const attrSize = m_text_attributes.size();
 
 		if (!attrSize) return 0;
 
-		rect clip_box(m_clip_x1, m_clip_y1, m_clip_x2, m_clip_y2);        
+		rect clip_box(m_clip_x1, m_clip_y1, m_clip_x2, m_clip_y2);
 
 
 //		m_contour.width(-m_weight.value() * m_height.value() * 0.05);
@@ -549,15 +579,15 @@ namespace agg
 
 		//set vertical aligning
 		int valign = 0;
-		if (mode == DRAW_TEXT && attr.para.valign != SW_TOP){
-			REBPAR total_size;
+		if (mode == DRAW_TEXT && attr.para.valign != W_TEXT_TOP){
+			REBXYF total_size;
 			rt_size_text(&total_size);
 			if (total_size.y == 0) total_size.y = lh;
 			switch (attr.para.valign){
-				case SW_BOTTOM:
+				case W_TEXT_BOTTOM:
 					valign = m_wrap_size_y - total_size.y;
 					break;
-				case SW_MIDDLE:
+				case W_TEXT_MIDDLE:
 					valign = (m_wrap_size_y - total_size.y) / 2;
 					break;
 			}
@@ -587,7 +617,7 @@ namespace agg
 
 		//find last text attribute
 		const text_attributes* last_text_attr = &attr;
-		
+
 		for(i = attrSize-1;i>0;i--){
 			if (m_text_attributes[i].index != 0){
 				last_text_attr = &m_text_attributes[i];
@@ -599,15 +629,15 @@ namespace agg
 
 		//precalculate the line width for aligning
 		int lw = 0; //no effect by default
-		if (attr.para.align == SW_RIGHT) {
+		if (attr.para.align == W_TEXT_RIGHT) {
 			lw = m_wrap_size_x - rt_line_width(0) - m_right_hang;
-		} else if (attr.para.align == SW_CENTER) {
+		} else if (attr.para.align == W_TEXT_CENTER) {
 			lw = (m_wrap_size_x - rt_line_width(0) - m_right_hang) / 2;
 		}
 
 		//process attribute stack
 		for(i = 0; i < attrSize; i++){
-
+//Reb_Print("processing attr: %d\n", i);
 			text_attributes& attr = m_text_attributes[i];
 
 			m_feng.height(attr.size);
@@ -617,11 +647,12 @@ namespace agg
 			} else {
 				m_feng.weight(FW_DONTCARE);
 			}
-
+//Reb_Print("create FONT beg\n");
 			if(m_feng.create_font(attr.name, m_gren))
 			{
+//			    Reb_Print("create FONT OK\n");
 //				m_fman.precache(' ', 127);
-		
+
 				if (i == 0){
 					//compute start of x coord
 					ABC* widths = new ABC [256];
@@ -652,23 +683,25 @@ m_text_pos_x = x0+lw;
 
 				//get char_width
 				SIZE area;
-				GetTextExtentPoint32( m_dc, "N", 1, &area );
+				GetTextExtentPoint32( m_dc, L"\x004E", 1, &area ); //"N"
 				attr.char_height = area.cy;
 
-				
+
 				if (attr.index == 0) {
 					//skip attributes holding other than string info
 					continue;
 				}
 
 				//render string
-				const char* p = attr.text;
+				const wchar_t* p = (wchar_t*)attr.text;
 
-				int slen = strlen(p);
+//				int slen = strlen(p);
+				int slen = wcslen(p);
 
 				//word wrap support
 				int wrap = 0;
-				int delim = strcspn (p," \n\t");
+//				int delim = strcspn (p," \n\t");
+				int delim = wcscspn (p,L"\x0020\x000A\x0009"); //" \n\t"
 				if ((delim > slen)){
 					area.cx =0;
 				} else {
@@ -682,6 +715,7 @@ m_text_pos_x = x0+lw;
 				switch (mode){
 					case DRAW_TEXT:
 						{
+//						    Reb_Print("DRAW TEXT!\n");
 						ren_buf tmp_rb;
 						pixfmt_type tmp_pf(tmp_rb);
 
@@ -691,24 +725,24 @@ m_text_pos_x = x0+lw;
 						} else {
 							shadow = false;
 						}
-
+//Reb_Print("CLIP BOX!\n");
 						m_ren_base.clip_box(m_clip_x1, m_clip_y1, m_clip_x2, m_clip_y2);
 
 						//draw text mode
 						while(*p){
-
+//Reb_Print("GET GLYPH!\n");
 							//get glyph
 							const glyph_cache* glyph = m_fman.glyph(*p);
-
+//Reb_Print("GET GLYPH OK!\n");
 							if(glyph)
 							{
-
+//Reb_Print("DRAW GLYPH!\n");
 								double g_adv_x = glyph->advance_x;
 
 								bool tabbing = false;
 
 								//tabbing
-								if ((attr.isPara)  && (p[0]=='\t')) {
+								if ((attr.isPara)  && (p[0]==L'\x0009')) {
 									int	tab_width = attr.para.tabs;
 									if (tab_width == 0){
 										tab_width = 40;
@@ -723,10 +757,11 @@ m_text_pos_x = x0+lw;
 										wrap = 1;
 									}
 
-									if (((p[0]==' ') || (p[0]=='\t') || ((p - attr.text != 0) && ((p-1)[0]=='\n'))) && (p[1]!=NULL)){
+									if (((p[0]==L'\x0020') || (p[0]==L'\x0009') || ((p - attr.text != 0) && ((p-1)[0]==L'\x000A'))) && (p[1]!=0)){
 										//get new word width for wrap check
 										wrap = 0;
-										delim = strcspn (p+1," \n\t");
+//										delim = strcspn (p+1," \n\t");
+										delim = wcscspn (p+1,L"\x0020\x000A\x0009"); //" \n\t"
 //										Reb_Print("delim: %d %d %d %d %d", strlen(p+1), slen, p, attr.text, slen + (attr.text - p) - 1 );
 										if (delim > slen + (attr.text - p) - 1){ //optimized! this means: (delim > (int)strlen(p+1))
 											area.cx =0;
@@ -743,9 +778,9 @@ m_text_pos_x = x0+lw;
 										(wrap == 0) &&
 										(((m_text_pos_x-lw-x0) + area.cx) >= m_wrap_size_x-m_right_hang)
 									){
-										//wrap the line 
+										//wrap the line
 										wrap = 1;
-										if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+										if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 									}
 
 									if (
@@ -758,19 +793,18 @@ m_text_pos_x = x0+lw;
 											wrap = 3;
 										} else {
 											wrap = 1;
-											if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+											if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 										}
 									}
 								}
 
 								//line break
 								if (
-									(p[0]=='\n') ||
+									(p[0]==L'\x000A') || //'\n'
 									(wrap == 1)
 								){
-
 									if (
-										(m_caret !=0) && ((p[0] == '\n') || (p[0] == ' ') || (p[0] == '\t')) &&
+										(m_caret !=0) && ((p[0] == L'\x000A') || (p[0] == L'\x0020') || (p[0] == L'\x0009')) &&
 										(m_caret->x == (int)attr.index) &&
 										(m_caret->y == (p - attr.text)+1)
 									){
@@ -797,7 +831,8 @@ m_text_pos_x = x0+lw;
 //										int slen = strlen(attr.text);
 
 										if ((slen != 1) && (attr.char_height <= next_lh)){
-											if (strchr(p+1,'\n') != NULL) {
+//											if (strchr(p+1,'\n') != NULL) {
+											if (wcschr(p+1,L'\x000A') != NULL) { //'\n'
 												m_text_pos_y += attr.asc + prev_max_desc + attr.space_y + 1;
 												mlha = i;
 												lh = attr.char_height;
@@ -841,9 +876,9 @@ m_text_pos_x = x0+lw;
 									p++;
 
 									//precalculate the line width for aligning
-									if (attr.para.align == SW_RIGHT) {
+									if (attr.para.align == W_TEXT_RIGHT) {
 										lw = m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang;
-									} else if (attr.para.align == SW_CENTER) {
+									} else if (attr.para.align == W_TEXT_CENTER) {
 										lw = (m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang) / 2;
 									} else {
 										lw = 0; //no effect by defaut
@@ -984,12 +1019,12 @@ m_text_pos_x = x0+lw;
 
 														m_fman.init_embedded_adaptors(glyph, bl, bl + attr.asc);
 														m_ren_bin.color(attr.shadow_color);
-														
-														render_scanlines(m_fman.mono_adaptor(), 
-																		  m_fman.mono_scanline(), 
+
+														render_scanlines(m_fman.mono_adaptor(),
+																		  m_fman.mono_scanline(),
 																		  m_ren_bin);
-														
-														
+
+
 														stack_blur_rgba32(tmp_pf, bl, bl);
 														m_ren_base.blend_from(tmp_pf,0,(int)(m_text_pos_x+attr.shadow_x-bl), (int)(m_text_pos_y+attr.shadow_y-attr.asc-bl), 255);
 														delete[] tmp;
@@ -998,9 +1033,9 @@ m_text_pos_x = x0+lw;
 														//simple shadow outline
 														m_fman.init_embedded_adaptors(glyph, m_text_pos_x+attr.shadow_x, m_text_pos_y+attr.shadow_y);
 														m_ren_bin.color(attr.shadow_color);
-														
-														render_scanlines(m_fman.mono_adaptor(), 
-																		  m_fman.mono_scanline(), 
+
+														render_scanlines(m_fman.mono_adaptor(),
+																		  m_fman.mono_scanline(),
 																		  m_ren_bin);
 													}
 												}
@@ -1010,8 +1045,8 @@ m_text_pos_x = x0+lw;
 
 											m_fman.init_embedded_adaptors(glyph, m_text_pos_x, m_text_pos_y);
 
-											render_scanlines(m_fman.mono_adaptor(), 
-																  m_fman.mono_scanline(), 
+											render_scanlines(m_fman.mono_adaptor(),
+																  m_fman.mono_scanline(),
 																  m_ren_bin);
 											break;
 
@@ -1039,12 +1074,12 @@ m_text_pos_x = x0+lw;
 
 														m_fman.init_embedded_adaptors(glyph, bl, bl + attr.asc);
 														m_ren_solid.color(attr.shadow_color);
-														
-														render_scanlines(m_fman.gray8_adaptor(), 
-																			  m_fman.gray8_scanline(), 
+
+														render_scanlines(m_fman.gray8_adaptor(),
+																			  m_fman.gray8_scanline(),
 																			  m_ren_solid);
-													
-														
+
+
 														stack_blur_rgba32(tmp_pf, bl, bl);
 														m_ren_base.blend_from(tmp_pf,0,(int)(m_text_pos_x+attr.shadow_x-bl), (int)(m_text_pos_y+attr.shadow_y-attr.asc-bl), 255);
 														delete[] tmp;
@@ -1053,8 +1088,8 @@ m_text_pos_x = x0+lw;
 														//simple shadow outline
 														m_fman.init_embedded_adaptors(glyph, m_text_pos_x+attr.shadow_x, m_text_pos_y+attr.shadow_y);
 														m_ren_solid.color(attr.shadow_color);
-														render_scanlines(m_fman.gray8_adaptor(), 
-																			  m_fman.gray8_scanline(), 
+														render_scanlines(m_fman.gray8_adaptor(),
+																			  m_fman.gray8_scanline(),
 																			  m_ren_solid);
 													}
 												}
@@ -1062,15 +1097,14 @@ m_text_pos_x = x0+lw;
 												m_ren_solid.color(attr.color);
 											}
 											m_fman.init_embedded_adaptors(glyph, m_text_pos_x, m_text_pos_y);
-											render_scanlines(m_fman.gray8_adaptor(), 
-																  m_fman.gray8_scanline(), 
+											render_scanlines(m_fman.gray8_adaptor(),
+																  m_fman.gray8_scanline(),
 																  m_ren_solid);
 											break;
 
 										case glyph_data_outline:
 
 											//render vectorial text
-
 											m_fman.init_embedded_adaptors(glyph, m_text_pos_x, m_text_pos_y);
 											m_path_storage->add_path(m_curves, m_cattr->index, false);
 											break;
@@ -1105,16 +1139,16 @@ m_text_pos_x = x0+lw;
 							}
 							++p;
 						}
-						
+
 						if (m_gren == glyph_ren_outline){
-	
+
 							if (m_color_changed && i >= m_color_changed) {
 								//use richtext colors once it is change in the dialect
 								m_cattr->fill_pen = attr.color;
 								m_cattr->filled = RT_FILL;
 								m_cattr->fill_pen_img_buf = NULL;
 							}
-								
+
 							//close previous path
 							m_path_storage->move_to(0,0);
 							m_path_storage->add_vertex(0.0, 0.0, path_cmd_stop);
@@ -1157,7 +1191,7 @@ m_text_pos_x = x0+lw;
 								bool tabbing = false;
 
 								//tabbing
-								if ((attr.isPara)  && (p[0]=='\t')) {
+								if ((attr.isPara)  && (p[0]==L'\x0009')) {
 									int	tab_width = attr.para.tabs;
 									if (tab_width == 0){
 										tab_width = 40;
@@ -1171,10 +1205,11 @@ m_text_pos_x = x0+lw;
 									if (wrap == 3) {
 										wrap = 1;
 									}
-									if (((p[0]==' ') || (p[0]=='\t') || ((p - attr.text != 0) && ((p-1)[0]=='\n'))) && (p[1]!=NULL)){
+									if (((p[0]==L'\x0020') || (p[0]==L'\x0009') || ((p - attr.text != 0) && ((p-1)[0]==L'\x000A'))) && (p[1] != 0)){
 										//get new word width for wrap check
 										wrap = 0;
-										delim = strcspn (p+1," \n\t");
+//										delim = strcspn (p+1," \n\t");
+										delim = wcscspn (p+1,L"\x0020\x000A\x0009"); //" \n\t"
 										if (delim > slen + (attr.text - p) - 1){ //optimized! this means: (delim > (int)strlen(p+1))
 											area.cx =0;
 										} else {
@@ -1190,9 +1225,9 @@ m_text_pos_x = x0+lw;
 										(wrap == 0) &&
 										(((m_text_pos_x-lw-x0) + area.cx) >= m_wrap_size_x-m_right_hang)
 									){
-										//wrap the line 
+										//wrap the line
 										wrap = 1;
-										if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+										if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 									}
 
 									if (
@@ -1205,7 +1240,7 @@ m_text_pos_x = x0+lw;
 											wrap = 3;
 										} else {
 											wrap = 1;
-											if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+											if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 										}
 									}
 								}
@@ -1213,7 +1248,7 @@ m_text_pos_x = x0+lw;
 
 								//line break
 								if (
-									(p[0]=='\n') ||
+									(p[0]==L'\x000A') ||
 									(wrap == 1)
 								){
 									//check the offset to caret condition
@@ -1248,7 +1283,8 @@ m_text_pos_x = x0+lw;
 //										int slen = strlen(attr.text);
 
 										if ((slen != 1) && (attr.char_height <= next_lh)){
-											if (strchr(p+1,'\n') != NULL) {
+//											if (strchr(p+1,'\n') != NULL) {
+											if (wcschr(p+1,L'\x000A') != NULL) { //'\n'
 												m_text_pos_y += attr.asc + prev_max_desc + attr.space_y + 1;
 												mlha = i;
 												lh = attr.char_height;
@@ -1269,7 +1305,7 @@ m_text_pos_x = x0+lw;
 											}
 										}
 									}
-									
+
 
 									//reset x position
 									if (wrap==1){
@@ -1282,9 +1318,9 @@ m_text_pos_x = x0+lw;
 									p++;
 
 									//precalculate the line width for aligning
-									if (attr.para.align == SW_RIGHT) {
+									if (attr.para.align == W_TEXT_RIGHT) {
 										lw = m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang;
-									} else if (attr.para.align == SW_CENTER) {
+									} else if (attr.para.align == W_TEXT_CENTER) {
 										lw = (m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang) / 2;
 									} else {
 										lw = 0; //no effect by defaut
@@ -1316,7 +1352,7 @@ m_text_pos_x = x0+lw;
 								int y = (int)m_text_pos_y - m_text_attributes[mlha].asc;//attr.asc;
 								if (
 									(px>=x) &&
-									(py>=y) && 
+									(py>=y) &&
 									(px <= x + g_adv_x + attr.space_x) &&
 									(py <= m_text_pos_y+attr.space_y+m_text_attributes[mlha].desc)//attr.desc)
 								){
@@ -1379,7 +1415,7 @@ m_text_pos_x = x0+lw;
 								bool tabbing = false;
 
 								//tabbing
-								if ((attr.isPara)  && (p[0]=='\t')) {
+								if ((attr.isPara)  && (p[0]==L'\x0009')) {
 									int	tab_width = attr.para.tabs;
 									if (tab_width == 0){
 										tab_width = 40;
@@ -1393,10 +1429,11 @@ m_text_pos_x = x0+lw;
 									if (wrap == 3) {
 										wrap = 1;
 									}
-									if (((p[0]==' ') || (p[0]=='\t') || ((p - attr.text != 0) && ((p-1)[0]=='\n'))) && (p[1]!=NULL)){
+									if (((p[0]==L'\x0020') || (p[0]==L'\x0009') || ((p - attr.text != 0) && ((p-1)[0]==L'\x000A'))) && (p[1]!= 0)){
 										//get new word width for wrap check
 										wrap = 0;
-										delim = strcspn (p+1," \n\t");
+//										delim = strcspn (p+1," \n\t");
+										delim = wcscspn (p+1,L"\x0020\x000A\x0009"); //" \n\t"
 										if (delim > slen + (attr.text - p) - 1){ //optimized! this means: (delim > (int)strlen(p+1))
 											area.cx =0;
 										} else {
@@ -1412,9 +1449,9 @@ m_text_pos_x = x0+lw;
 										(wrap == 0) &&
 										(((m_text_pos_x-lw-x0) + area.cx) >= m_wrap_size_x-m_right_hang)
 									){
-										//wrap the line 
+										//wrap the line
 										wrap = 1;
-										if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+										if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 									}
 
 									if (
@@ -1427,14 +1464,14 @@ m_text_pos_x = x0+lw;
 											wrap = 3;
 										} else {
 											wrap = 1;
-											if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+											if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 										}
 									}
 								}
-								
+
 								//line break
 								if (
-									(p[0]=='\n') ||
+									(p[0]==L'\x000A') || //'\n'
 									(wrap == 1)
 								){
 
@@ -1472,7 +1509,8 @@ m_text_pos_x = x0+lw;
 //										int slen = strlen(attr.text);
 
 										if ((slen != 1) && (attr.char_height <= next_lh)){
-											if (strchr(p+1,'\n') != NULL) {
+//											if (strchr(p+1,'\n') != NULL) {
+											if (wcschr(p+1,L'\x000A') != NULL) { //'\n'
 												m_text_pos_y += attr.asc + prev_max_desc + attr.space_y + 1;
 												mlha = i;
 												lh = attr.char_height;
@@ -1505,9 +1543,9 @@ m_text_pos_x = x0+lw;
 									p++;
 
 									//precalculate the line width for aligning
-									if (attr.para.align == SW_RIGHT) {
+									if (attr.para.align == W_TEXT_RIGHT) {
 										lw = m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang;
-									} else if (attr.para.align == SW_CENTER) {
+									} else if (attr.para.align == W_TEXT_CENTER) {
 										lw = (m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang) / 2;
 									} else {
 										lw = 0; //no effect by defaut
@@ -1579,7 +1617,7 @@ m_text_pos_x = x0+lw;
 								bool tabbing = false;
 
 								//tabbing
-								if ((attr.isPara)  && (p[0]=='\t')) {
+								if ((attr.isPara)  && (p[0]==L'\x0009')) {
 									int	tab_width = attr.para.tabs;
 									if (tab_width == 0){
 										tab_width = 40;
@@ -1593,10 +1631,11 @@ m_text_pos_x = x0+lw;
 									if (wrap == 3) {
 										wrap = 1;
 									}
-									if (((p[0]==' ') || (p[0]=='\t') || ((p - attr.text != 0) && ((p-1)[0]=='\n'))) && (p[1]!=NULL)){
+									if (((p[0]==L'\x0020') || (p[0]==L'\x0009') || ((p - attr.text != 0) && ((p-1)[0]==L'\x000A'))) && (p[1] != 0)){
 										//get new word width for wrap check
 										wrap = 0;
-										delim = strcspn (p+1," \n\t");
+//										delim = strcspn (p+1," \n\t");
+                                        delim = wcscspn (p+1,L"\x0020\x000A\x0009"); //" \n\t"
 										if (delim > slen + (attr.text - p) - 1){ //optimized! this means: (delim > (int)strlen(p+1))
 											area.cx =0;
 										} else {
@@ -1612,9 +1651,9 @@ m_text_pos_x = x0+lw;
 										(wrap == 0) &&
 										(((m_text_pos_x-lw-x0) + area.cx) >= m_wrap_size_x-m_right_hang)
 									){
-										//wrap the line 
+										//wrap the line
 										wrap = 1;
-										if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+										if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 									}
 
 									if (
@@ -1627,14 +1666,14 @@ m_text_pos_x = x0+lw;
 											wrap = 3;
 										} else {
 											wrap = 1;
-											if ((p[0] !=' ') && (p[0] !='\n') && (p[0] != '\t')) p--;
+											if ((p[0] !=L'\x0020') && (p[0] !=L'\x000A') && (p[0] != L'\x0009')) p--;
 										}
 									}
 								}
-								
+
 								//line break
 								if (
-									(p[0]=='\n') ||
+									(p[0]==L'\x000A') || //'\n'
 									(wrap == 1)
 								){
 
@@ -1657,7 +1696,8 @@ m_text_pos_x = x0+lw;
 //										int slen = strlen(attr.text);
 
 										if ((slen != 1) && (attr.char_height <= next_lh)){
-											if (strchr(p+1,'\n') != NULL) {
+//											if (strchr(p+1,'\n') != NULL) {
+											if (wcschr(p+1,L'\x000A') != NULL) { //'\n'
 												m_text_pos_y += attr.asc + prev_max_desc + attr.space_y + 1;
 												mlha = i;
 												lh = attr.char_height;
@@ -1699,9 +1739,9 @@ m_text_pos_x = x0+lw;
 									p++;
 
 									//precalculate the line width for aligning
-									if (attr.para.align == SW_RIGHT) {
+									if (attr.para.align == W_TEXT_RIGHT) {
 										lw = m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang;
-									} else if (attr.para.align == SW_CENTER) {
+									} else if (attr.para.align == W_TEXT_CENTER) {
 										lw = (m_wrap_size_x - rt_line_width(i,(p - attr.text)) - m_right_hang) / 2;
 									} else {
 										lw = 0; //no effect by defaut
@@ -1765,7 +1805,8 @@ m_text_pos_x = x0+lw;
 			//			((clip) || (glyph->bounds.x1>=glyph->bounds.x2)) &&
 						(m_caret !=0) &&
 						(m_caret->x == (int)last_text_attr->index) &&
-						(m_caret->y > (int)strlen(last_text_attr->text))
+//						(m_caret->y > (int)strlen(last_text_attr->text))
+						(m_caret->y > (int)wcslen(last_text_attr->text))
 					){
 						m_ren_base.blend_bar((int)m_text_pos_x-1,(int)(m_text_pos_y-last_text_attr->asc),(int)(m_text_pos_x),(int)(m_text_pos_y+last_text_attr->desc), rgba8(0,0,0,255) ,255);
 					}
@@ -1783,7 +1824,8 @@ m_text_pos_x = x0+lw;
 			case OFFSET_TO_CARET:
 					//return tail of last string
 					m_tmp_val.pair.x=last_text_attr->index;
-					m_tmp_val.pair.y=1+strlen(last_text_attr->text);
+//					m_tmp_val.pair.y=1+strlen(last_text_attr->text);
+					m_tmp_val.pair.y=1+wcslen(last_text_attr->text);
 
 					caret_info.lh_asc=m_text_attributes[mlha].asc;
 					caret_info.lh_desc=m_text_attributes[mlha].desc;

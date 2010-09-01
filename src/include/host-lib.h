@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: Host Access Library
-**  Build: A104
-**  Date:  26-Aug-2010/20:40:59-7:00
+**  Build: A105
+**  Date:  1-Sep-2010
 **  File:  host-lib.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-os-ext.r)
@@ -16,7 +16,7 @@
 ***********************************************************************/
 
 
-#define HOST_LIB_VER 104
+#define HOST_LIB_VER 105
 #define HOST_LIB_SUM 5782
 #define HOST_LIB_SIZE 30
 

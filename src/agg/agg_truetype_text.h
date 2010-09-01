@@ -10,7 +10,7 @@
 #include "agg_conv_contour.h"
 #include "agg_pixfmt_rgba_rebol.h"
 #include "agg_font_win32_tt.h"
-//include "words-graphics.h"
+#include "host-ext-text.h"
 
 namespace agg
 {
@@ -36,12 +36,13 @@ namespace agg
 
 	//text highlight info
 	typedef struct hinfo {
-		REBPAR hStart;
-		REBPAR hEnd;
+		REBXYF hStart;
+		REBXYF hEnd;
 	} HINFO;
 
 	typedef struct font {
-		REBYTE *name;
+		wchar_t *name;
+		REBCNT name_gc;
 		REBINT bold;
 		REBINT italic;
 		REBINT underline;
@@ -55,14 +56,15 @@ namespace agg
 		REBINT shadow_y;
 		REBYTE* shadow_color;
 		REBINT shadow_blur;
-		
+
 		~font() {
 			delete [] color;
 			delete [] shadow_color;
 		}
 
 		font() :
-			name((unsigned char *)"Arial"),
+			name(L"\x0041\x0072\x0069\x0061\x006C"), //"Arial"
+			name_gc(TRUE),
 			bold(0),
 			italic(0),
 			underline(0),
@@ -104,8 +106,8 @@ namespace agg
 			indent_y(0),
 			scroll_x(0),
 			scroll_y(0),
-			align(SW_LEFT),
-			valign(SW_TOP)
+			align(W_TEXT_LEFT),
+			valign(W_TEXT_TOP)
 		{
 		}
 	} PARA;
@@ -117,7 +119,8 @@ namespace agg
 
 	struct text_attributes {
 		unsigned index;
-		char *name;
+		wchar_t *name;
+		bool name_gc;
 		int bold;
 		int italic;
 		int underline;
@@ -131,7 +134,8 @@ namespace agg
 		int shadow_y;
 		rgba8 shadow_color;
 		REBINT shadow_blur;
-		char *text;
+		wchar_t *text;
+		bool text_gc;
 		bool isPara;
 		PARA para;
 		long asc;
@@ -141,6 +145,7 @@ namespace agg
 		text_attributes(unsigned idx = 0) :
 			index(idx),
 			name(0),
+			name_gc(true),
 			bold(0),
 			italic(0),
 			underline(0),
@@ -170,8 +175,8 @@ namespace agg
 			para.indent_y=0;
 			para.scroll_x=0;
 			para.scroll_y=0;
-			para.align=SW_LEFT;
-			para.valign=SW_TOP;
+			para.align=W_TEXT_LEFT;
+			para.valign=W_TEXT_TOP;
 		}
 	};
 
@@ -208,20 +213,20 @@ namespace agg
 			para* rt_get_para();
 			void rt_attr_to_font (text_attributes& attr);
 			int rt_drop(unsigned int idx = 1);
-			int rt_set_text(char* text);
+			int rt_set_text(REBCHR* text, REBCNT gc);
 			int rt_text_mode(int mode =0);
-			int rt_draw_text(int mode = DRAW_TEXT, REBPAR* offset = 0);
+			int rt_draw_text(int mode = DRAW_TEXT, REBXYF* offset=0);
 
-			void rt_offset_to_caret(REBPAR* offset, REBINT *element, REBINT *position);
-			void rt_caret_to_offset(REBPAR* offset, REBINT element, REBINT position);
+			void rt_offset_to_caret(REBXYF offset, REBINT *element, REBINT *position);
+			void rt_caret_to_offset(REBXYF* offset, REBINT element, REBINT position);
 
-			int rt_set_caret(REBPAR* offset);
+			int rt_set_caret(REBXYF offset);
 
-			int rt_scroll(REBPAR* offset);
+			int rt_scroll(REBXYF offset);
 
-			void rt_set_hinfo(REBPAR* highlightStart, REBPAR* highlightEnd);
+			void rt_set_hinfo(REBXYF highlightStart, REBXYF highlightEnd);
 
-			int rt_size_text(REBPAR* size);
+			int rt_size_text(REBXYF* size);
 			int rt_text_height(int idx);
 			int rt_max_line_height(int idx);
 			int rt_line_width(int idx, int start = 0);
@@ -231,7 +236,7 @@ namespace agg
 			void rt_color_change();
 
 			text_attributes& rt_curr_attributes();
-			
+
 			cinfo caret_info;
 
 			int debug;
@@ -265,15 +270,16 @@ namespace agg
 			path_attributes*			m_cattr;
 			double						m_text_pos_x;
 			double						m_text_pos_y;
-			char*						m_text;
+			REBCHR*				        m_text;
+			REBCNT				        m_text_gc;
 			font*						m_font;
 			para*						m_para;
 			tmp_val						m_tmp_val;
-			REBPAR*						m_caret;
+			REBXYF*						m_caret;
 			hinfo*						m_hinfo;
 			REBPAR						m_hstart;
 			REBPAR						m_hend;
-				
+
 			unsigned					m_color_changed;
 
 			pixfmt_type m_pf;

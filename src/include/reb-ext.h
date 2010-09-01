@@ -7,7 +7,7 @@
 ************************************************************************
 **
 **  Title: Extensions Include File
-**  Build: A100
+**  Build: A105
 **  Date:  17-Jul-2010/14:47:24-7:00
 **  File:  reb-ext.h
 **
@@ -15,6 +15,18 @@
 
 #include "reb-defs.h"
 #include "ext-types.h"
+
+/* Prefix naming conventions:
+
+  RL:  REBOL library API function (or function access macro)
+  RXI: REBOL eXtensions Interface (general constructs)
+  RXA: REBOL eXtensions function Argument (value)
+  RXR: REBOL eXtensions function Return types
+  RXE: REBOL eXtensions Error codes
+  RXC: REBOL eXtensions Callback flag
+
+*/
+
 
 // Value structure (for passing args to and from):
 typedef union rxi_arg_val {
@@ -51,7 +63,13 @@ typedef struct rxi_cmd_frame {
 	RXIARG args[8];	// arg values (64 bits each)
 } RXIFRM;
 
-typedef int (*RXICAL)(int cmd, RXIFRM *args, void *data);
+typedef struct rxi_cmd_context {
+	void *envr;		// for holding a reference to your environment
+	REBSER *block;	// block being evaluated
+	REBCNT index;	// 0-based index of current command in block
+} REBCEC;
+
+typedef int (*RXICAL)(int cmd, RXIFRM *args, REBCEC *ctx);
 
 // Access macros (indirect access via RXIFRM pointer):
 #define RXA_ARG(f,n)	((f)->args[n])
@@ -74,7 +92,7 @@ typedef int (*RXICAL)(int cmd, RXIFRM *args, void *data);
 #define RXA_MODULE(f,n)	(RXA_ARG(f,n).addr)
 #define RXA_HANDLE(f,n)	(RXA_ARG(f,n).addr)
 #define RXA_IMAGE(f,n)	(RXA_ARG(f,n).image)
-#define RXA_IMAGE_BITS(f,n)	  ((REBYTE *)RXI_SERIES_INFO((RXA_ARG(f,n).image), RXI_SER_DATA))
+#define RXA_IMAGE_BITS(f,n)	  ((REBYTE *)RL_SERIES((RXA_ARG(f,n).image), RXI_SER_DATA))
 #define RXA_IMAGE_WIDTH(f,n)  (RXA_ARG(f,n).width)
 #define RXA_IMAGE_HEIGHT(f,n) (RXA_ARG(f,n).height)
 
@@ -94,8 +112,8 @@ enum rxi_return {
 
 // Used with RXI_SERIES_INFO:
 enum {
-	RXI_SER_TAIL,	// series tail index (length of data)
 	RXI_SER_DATA,	// pointer to data
+	RXI_SER_TAIL,	// series tail index (length of data)
 	RXI_SER_SIZE,	// size of series (in units)
 	RXI_SER_WIDE,	// width of series (in bytes)
 	RXI_SER_LEFT,	// units free in series (past tail)
@@ -113,7 +131,7 @@ enum {
 #define GET_EXT_ERROR(v)   ((v)->int32a)
 
 typedef struct rxi_callback_info {
-	u32 flags;		
+	u32 flags;
 	REBSER *obj;	// object that holds the function
 	u32 word;		// word id for function (name)
 	RXIARG *args;	// argument list for function

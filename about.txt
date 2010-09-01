@@ -1,0 +1,37 @@
+REBOL 3 Host-Kit Source Distribution
+From REBOL Technologies in Ukiah, California
+
+    Version: 2.100.105.0.0  (alpha)
+    Updated: 1-Sep-2010/9:55:48-7:00 
+
+PURPOSE:
+
+The purpose of the R3 Host-Kit is to provide developers with a method of
+building custom versions of REBOL, including built-in extension modules.
+
+SEE:
+
+   http://www.rebol.com/r3/docs/concepts/host-kit.html
+   http://www.rebol.com/r3/docs/concepts/extensions.html
+
+FEEDBACK:
+
+R3 Chat is the forum for comments, feedback, code changes, and questions.
+Type "chat" at the R3 command line. Most users only need to know about
+five commands. Type "help" for doc pages, and "?" for a summary.
+
+HOW TO BUILD:
+
+We have included project makefiles for various tool-chains as make-name
+directories. Some of these can be run directly from their directories.
+Others may require you to move their files to the top directory.
+
+For some types of builds, you need rebol.exe in your build directory.
+
+That's it for now. Be productive, lean, and quick,
+
+-Carl
+
+Carl Sassenrath
+REBOL Chief
+

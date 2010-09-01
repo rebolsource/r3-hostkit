@@ -1,5 +1,5 @@
 #include "agg_graphics.h"
-//include "agg_truetype_text.h"
+#include "agg_truetype_text.h"
 //include "agg_effects.h"
 
 /*
@@ -7,11 +7,11 @@ Code by: Richard Smolak (Cyphre)
 All rights reserved.
 */
 
-//extern "C" void* Rich_Text;
+extern "C" void* Rich_Text;
 //extern "C" void* Effects;
-//extern "C" REBINT Text_Gob(void *graphics, REBSER *block);
+extern "C" REBINT Text_Gob(void *richtext, REBSER *block);
 //extern "C" REBINT Effect_Gob(void *effects, REBSER *block);
-
+extern "C" void Reb_Print(char *fmt, ...);//output just for testing
 namespace agg
 {
 
@@ -42,7 +42,7 @@ agg_graphics::agg_graphics(ren_buf* buf,int w, int h, int x, int y) :
 
 		m_actual_width = w;
 		m_actual_height = h;
-/*		
+/*
 		m_defaults = defaults;
 
 		m_actual_width = m_defaults->width;
@@ -50,7 +50,7 @@ agg_graphics::agg_graphics(ren_buf* buf,int w, int h, int x, int y) :
 */
 		m_initial_width = m_actual_width;
 		m_initial_height = m_actual_height;
-		
+
 		m_ratio_x = 1;
 		m_ratio_y = 1;
 
@@ -141,9 +141,9 @@ Reb_Print(
 						if (attr.fill_pen_img_buf != 0) {
 							// image pattern fill
 							ren_buf rbuf_img;
-							// Create the image rendering buffer 
+							// Create the image rendering buffer
 							rbuf_img.attach(attr.fill_pen_img_buf, attr.fill_pen_img_buf_x, attr.fill_pen_img_buf_y, attr.fill_pen_img_buf_x * 4);
-							
+
 							m_img_mtx.reset();
 							m_img_mtx = attr.mtx;
 							m_img_mtx *= m_output_mtx;
@@ -159,8 +159,8 @@ Reb_Print(
 							typedef renderer_scanline_aa<ren_base, span_gen_type> renderer_type;
 							typedef renderer_scanline_bin<ren_base, span_gen_type> renderer_bin_type;
 							span_allocator<rgba8> sa;
-							span_gen_type sg(sa, 
-											 rbuf_img, 
+							span_gen_type sg(sa,
+											 rbuf_img,
 											 m_interpolator_linear);
 
 							m_ras.reset();
@@ -193,12 +193,12 @@ Reb_Print(
 							typedef span_allocator<gouraud_span_gen_type::color_type> gouraud_span_alloc_type;
 							typedef renderer_scanline_aa<renderer_base<pixfmt>, gouraud_span_gen_type> renderer_gouraud;
 							typedef renderer_scanline_bin<renderer_base<pixfmt>, gouraud_span_gen_type> renderer_bin_gouraud;
-       
+
 							gouraud_span_alloc_type span_alloc;
 							gouraud_span_gen_type   span_gen(span_alloc);
 
 							double* vertices;
-							vertices = getVertices(m_trans, attr.index);	
+							vertices = getVertices(m_trans, attr.index);
 
 
 							span_gen.colors(
@@ -234,7 +234,7 @@ Reb_Print(
 							ren_base_pre renb_pre(pixf_pre);
 
 							if (attr.g_color1.a != 0){//color key enabled
-								// attach the original image to  rendering buffer 
+								// attach the original image to  rendering buffer
 							rbuf_img.attach(attr.img_buf, (int)attr.coord_x, (int)attr.coord_y, (int)attr.coord_x * 4);
 								//create new buffer for keyed image
 								key_img_buffer = new unsigned char[(int)attr.coord_x * (int)attr.coord_y * 4];
@@ -270,22 +270,22 @@ Reb_Print(
 
 							m_ras.reset();
 							m_ras.add_path(m_trans_curved, attr.index);
-														
+
 							span_allocator<rgba8> sa;
-						
+
 							if (attr.img_filter_type == FT_NEAREST){
 //Reb_Print ("NN filter");
 								//nn filter
 								typedef span_image_filter_rgba_nn<rgba8, component_order, span_interpolator_linear<> > span_gen_type;
 								typedef renderer_scanline_aa<ren_base, span_gen_type> renderer_type;
 								typedef renderer_scanline_bin<ren_base, span_gen_type> renderer_bin_type;
-								
-								span_gen_type sg(sa, 
+
+								span_gen_type sg(sa,
 									rbuf_img_out,
 									rgba8(255,0,0,255),
 									m_interpolator_linear
 									);
-								
+
 								if (attr.anti_aliased){
 									renderer_type ri(renb, sg);
 									render_scanlines(m_ras, m_u_sl, ri);
@@ -309,7 +309,7 @@ Reb_Print(
 										filter.calculate(agg::image_filter_gaussian());
 									break;
 								}
-								
+
 								double* vertices = getVertices(m_trans,attr.index);
 								trans_perspective tr(vertices, vertices);
 								delete[] vertices;
@@ -323,7 +323,7 @@ Reb_Print(
 											typedef span_image_filter_rgba<agg::rgba8,component_order, span_interpolator_linear<> > span_gen_type;
 											typedef agg::renderer_scanline_aa<ren_base_pre, span_gen_type> renderer_type;
 											typedef agg::renderer_scanline_bin<ren_base_pre, span_gen_type> renderer_bin_type;
-											
+
 											span_gen_type sg(sa, rbuf_img_out, *m_buf, m_interpolator_linear, filter, tr);
 
 											if (attr.anti_aliased){
@@ -339,13 +339,13 @@ Reb_Print(
 										{
 //Reb_Print ("filter with resampling");
 											//filter with resampling
-											
+
 											typedef span_image_resample_rgba_affine<agg::rgba8,component_order, span_allocator<rgba8> > span_gen_type;
 											typedef agg::renderer_scanline_aa<ren_base_pre, span_gen_type> renderer_type;
 											typedef agg::renderer_scanline_bin<ren_base_pre, span_gen_type> renderer_bin_type;
 
 											span_gen_type sg(sa, rbuf_img_out, *m_buf, m_interpolator_linear, filter, tr);
-											
+
 											sg.blur(attr.img_filter_arg);
 
 											if (attr.anti_aliased){
@@ -378,7 +378,7 @@ Reb_Print(
 							ren_base_pre renb_pre(pixf_pre);
 
 							if (attr.g_color1.a != 0){//color key enabled
-								// attach the original image to  rendering buffer 
+								// attach the original image to  rendering buffer
 							rbuf_img.attach(attr.img_buf, (int)attr.coord_x, (int)attr.coord_y, (int)attr.coord_x * 4);
 								//create new buffer for keyed image
 								key_img_buffer = new unsigned char[(int)attr.coord_x * (int)attr.coord_y * 4];
@@ -395,7 +395,7 @@ Reb_Print(
 
 							typedef span_allocator<rgba8> span_alloc_type;
 							span_alloc_type sa;
-							
+
 							typedef wrap_mode_reflect_auto_pow2 wrap_type;
 
 							m_ras.reset();
@@ -404,9 +404,9 @@ Reb_Print(
 							double* vertices = getVertices(m_trans,attr.index);
 
 							if (attr.pattern_mode == PM_NORMAL){
-								m_trans_perspective.quad_to_rect(vertices, 0, 0, (int)attr.coord_x, (int)attr.coord_y);
+								m_trans_perspective.quad_to_rect(vertices, 0, 0, attr.coord_x, attr.coord_y);
 							} else {
-								m_trans_perspective.quad_to_rect(vertices, (int)attr.coord_x2, (int)attr.coord_y2, (int)attr.coord_x3,(int)attr.coord_y3);
+								m_trans_perspective.quad_to_rect(vertices, attr.coord_x2, attr.coord_y2, attr.coord_x3, attr.coord_y3);
 							}
 							if(m_trans_perspective.is_valid()){
 
@@ -421,7 +421,7 @@ Reb_Print(
 												typedef renderer_scanline_aa<renderer_base<pixfmt>, span_gen_normal> renderer_type;
 												typedef renderer_scanline_bin<renderer_base<pixfmt>, span_gen_normal> renderer_bin_type;
 
-												span_gen_normal sg(sa, 
+												span_gen_normal sg(sa,
 														 rbuf_img_out,
 														 rgba8(255,0,0,255),
 														 m_interpolator_trans);
@@ -440,7 +440,7 @@ Reb_Print(
 												typedef renderer_scanline_aa<renderer_base<pixfmt>, span_gen_repeat> renderer_type;
 												typedef renderer_scanline_bin<renderer_base<pixfmt>, span_gen_repeat> renderer_bin_type;
 
-												span_gen_repeat sg(sa, 
+												span_gen_repeat sg(sa,
 														 rbuf_img_out,
 														 m_interpolator_trans);
 												if (attr.anti_aliased){
@@ -458,7 +458,7 @@ Reb_Print(
 												typedef renderer_scanline_aa<renderer_base<pixfmt>, span_gen_reflect> renderer_type;
 												typedef renderer_scanline_bin<renderer_base<pixfmt>, span_gen_reflect> renderer_bin_type;
 
-												span_gen_reflect sg(sa, 
+												span_gen_reflect sg(sa,
 														 rbuf_img_out,
 														 m_interpolator_trans);
 												if (attr.anti_aliased){
@@ -545,14 +545,14 @@ Reb_Print(
 										case FM_RESAMPLE:
 											{
 												//filter with resampling
-												
+
 //Reb_Print ("Perspective filter with resampling");
-												
-												typedef agg::span_subdiv_adaptor<interp_persp> subdiv_adaptor_type; 
+
+												typedef agg::span_subdiv_adaptor<interp_persp> subdiv_adaptor_type;
 												subdiv_adaptor_type subdiv_adaptor(m_interpolator_persp);
 
 												if (attr.pattern_mode == PM_NORMAL){
-													m_interpolator_persp.quad_to_rect(vertices, 0, 0, (int)attr.coord_x, (int)attr.coord_y);
+													m_interpolator_persp.quad_to_rect(vertices, 0, 0, attr.coord_x, attr.coord_y);
 												} else {
 													m_interpolator_persp.quad_to_rect(vertices, attr.coord_x2, attr.coord_y2, attr.coord_x3,attr.coord_y3);
 												}
@@ -633,7 +633,7 @@ Reb_Print(
 						{
 
 							typedef span_interpolator_linear<> interpolator_type;
-							typedef span_gradient<rgba8, 
+							typedef span_gradient<rgba8,
 													   interpolator_type,
 													   gradient_polymorphic_wrapper_base,
 													   color_function_profile> gradient_span_gen;
@@ -642,7 +642,7 @@ Reb_Print(
 							typedef renderer_scanline_aa<renderer_base<pixfmt> , gradient_span_gen> renderer_gradient;
 
 							typedef renderer_scanline_bin<renderer_base<pixfmt> , gradient_span_gen> renderer_bin_gradient;
-        
+
 							gradient_span_alloc    span_alloc;
 
 							m_grad_mtx = attr.mtx;
@@ -666,26 +666,25 @@ Reb_Print(
 
 						}
 						break;
-#ifdef TEMP_REMOVED
 					case RT_TEXT:
 						{
 							rich_text* rt = (rich_text*)Rich_Text;
-							REBPAR pos;
+							REBXYF pos;
 
 							double sx = attr.coord_x2 - attr.coord_x;
 							double sy = attr.coord_y2 - attr.coord_y;
 
 							attr.post_mtx.transform(&attr.coord_x, &attr.coord_y);
-							pos.x = (int)attr.coord_x;
-							pos.y = (int)attr.coord_y;
+							pos.x = attr.coord_x;
+							pos.y = attr.coord_y;
 							rt->rt_reset();
 
 							if (attr.coord_x2 && attr.coord_y2){
 								rt->rt_attach_buffer(m_buf, (int)sx, (int)sy, m_offset_x, m_offset_y);
-//								rt->rt_set_clip(pos.x , pos.y,  (int)sx + pos.x, (int)sy + pos.y);
-								rt->rt_set_clip(renb.xmin() , renb.ymin(),  renb.xmax(), renb.ymax());
+								rt->rt_set_clip((int)pos.x , (int)pos.y,  (int)(sx + pos.x), (int)(sy + pos.y));
+//								rt->rt_set_clip(renb.xmin() , renb.ymin(),  renb.xmax(), renb.ymax());
 							} else {
-								rt->rt_attach_buffer(m_buf, m_actual_width - pos.x, m_actual_height - pos.y, m_offset_x, m_offset_y);
+								rt->rt_attach_buffer(m_buf, m_actual_width - (int)pos.x, m_actual_height - (int)pos.y, m_offset_x, m_offset_y);
 							}
 
 							REBINT result = Text_Gob(rt, attr.block);
@@ -694,11 +693,12 @@ Reb_Print(
 							rt->rt_draw_text(DRAW_TEXT, &pos);
 						}
 						break;
+#ifdef TEMP_REMOVED
 					case RT_EFFECT:
 						{
 							double sx = attr.coord_x2 - attr.coord_x;
 							double sy = attr.coord_y2 - attr.coord_y;
-						
+
 							attr.post_mtx.transform(&attr.coord_x, &attr.coord_y);
 
 							rect cb((int)attr.coord_x, (int)attr.coord_y, (int)(attr.coord_x + sx), (int)(attr.coord_y + sy));
@@ -729,9 +729,9 @@ Reb_Print(
 				}
 
 				m_ras.filling_rule(fill_non_zero);
-			
+
 				if (attr.stroked) {
-                    // If the *visual* line width is considerable we 
+                    // If the *visual* line width is considerable we
                     // turn on processing of curve cusps.
                     //---------------------
                     if(lw > 1.0)
@@ -753,13 +753,13 @@ Reb_Print(
 						typedef renderer_outline_image<ren_base, pattern_type> renderer_type;
 						typedef rasterizer_outline_aa<renderer_type>                rasterizer_type;
 
-						// Create the image rendering buffer 
+						// Create the image rendering buffer
 						rendering_buffer rbuf_img;
 						rbuf_img.attach(attr.pen_img_buf, attr.pen_img_buf_x, attr.pen_img_buf_y, attr.pen_img_buf_x * 4);
 						pixfmt pixf_img(rbuf_img);
 						ren_base renb_img(pixf_img);
 
-						pattern_type patt(fltr, renb_img);   
+						pattern_type patt(fltr, renb_img);
 
 						renderer_type ren_img(renb, patt);
 						rasterizer_type ras_img(ren_img);
@@ -787,7 +787,7 @@ Reb_Print(
 							render_scanlines(m_ras, m_p_sl, ren_b);
 						}
 					}
-			
+
 					//render arrows if needed
 					if ((attr.arrow_head > 0) || (attr.arrow_tail > 0)){
 						double k = ::pow(lw, 0.7);
@@ -845,7 +845,7 @@ Reb_Print(
 
 					// define dashes pattern
 					m_dash.remove_all_dashes();
-					
+
 					double* pattern = attr.dash_array;
 
 					for(int j = 1; j < (int)pattern[0]; j+=2) {
@@ -906,7 +906,7 @@ Reb_Print(
 
 	void agg_graphics::agg_resize_buffer(unsigned char *buf, int width, int height)
 	{
-		
+
 		m_buf = buf;
 
 		m_actual_width = width;
@@ -941,7 +941,7 @@ Reb_Print(
 
 		m_output_mtx = m_resize_mtx;
 		m_output_mtx *= m_post_mtx;
-		
+
 	}
 
 	void agg_graphics::agg_rotate(double ang)
@@ -952,7 +952,7 @@ Reb_Print(
 		m_post_mtx.premultiply(trans_affine_rotation(fmod(ang,360) * pi / 180.0));
 		m_output_mtx = m_resize_mtx;
 		m_output_mtx *= m_post_mtx;
-		
+
 	}
 
 	void agg_graphics::agg_translate(double trX, double trY)
@@ -961,7 +961,7 @@ Reb_Print(
 		m_post_mtx.premultiply(trans_affine_translation(trX, trY));
 		m_output_mtx = m_resize_mtx;
 		m_output_mtx *= m_post_mtx;
-		
+
 	}
 
 	void agg_graphics::agg_scale(double sclX ,double sclY)
@@ -990,12 +990,12 @@ Reb_Print(
 		double sx =	double(m_actual_width) / double(m_initial_width);
 		double sy = double(m_actual_height) / double(m_initial_height);
 		if(sy < sx) sx = sy;
-		
+
 		m_line_width = w * sx;
 */
 		m_line_width = w;
 		m_line_width_mode = mode;
-		
+
 	}
 
 	path_attributes& agg_graphics::curr_attributes()
@@ -1022,7 +1022,7 @@ Reb_Print(
 			m_pen.g = g;
 			m_pen.b = b;
 		}
-		
+
 	}
 
 
@@ -1040,7 +1040,7 @@ Reb_Print(
 		} else {
 			m_filled = RT_FILL;
 		}
-		
+
 	}
 
 	void agg_graphics::agg_reset_gradient_pen(){
@@ -1054,7 +1054,7 @@ Reb_Print(
 
 		unsigned o = 3, of = 2, j = 5;
 
-		if (offsets[0] == -1) 
+		if (offsets[0] == -1)
 			offsets = 0;
 		else {
 			//add colors on gradient edges if edge offsets are not default
@@ -1084,22 +1084,22 @@ Reb_Print(
 
 		switch (grad)
 		{
-			case 0:
+			case W_DRAW_RADIAL:
 				m_gradient = &gr_circle;
 				break;
-			case 1:
+			case W_DRAW_CONIC:
 				m_gradient = &gr_conic;
 				break;
-			case 2:
+			case W_DRAW_DIAMOND:
 				m_gradient = &gr_diamond;
 				break;
-			case 3:
+			case W_DRAW_LINEAR:
 				m_gradient = &gr_x;
 				break;
-			case 4:
+			case W_DRAW_DIAGONAL:
 				m_gradient = &gr_xy;
 				break;
-			case 5:
+			case W_DRAW_CUBIC:
 				m_gradient = &gr_sqrt_xy;
 				break;
 		}
@@ -1162,12 +1162,12 @@ Reb_Print(
 
 	void agg_graphics::agg_begin_path()
 	{
-		
+
 		unsigned idx = m_path.start_new_path();
 		m_attributes.add(path_attributes(idx));
 		agg_get_attributes(curr_attributes());
 	}
-	
+
 	void agg_graphics::agg_get_attributes(path_attributes& attr){
 
 		attr.filled = m_filled;
@@ -1181,7 +1181,7 @@ Reb_Print(
 		attr.arrow_color = m_arrow_color;
 		attr.anti_aliased = m_anti_aliased;
 		attr.fill_rule = m_fill_rule;
-		
+
 		attr.pen = m_pen;
 		attr.fill_pen = m_fill_pen;
 		attr.line_pattern_pen = m_line_pattern_pen;
@@ -1230,7 +1230,7 @@ Reb_Print(
 		m_arrow_color = attr.arrow_color;
 		m_anti_aliased = attr.anti_aliased;
 		m_fill_rule = attr.fill_rule;
-		
+
 		m_pen = attr.pen;
 		m_fill_pen = attr.fill_pen;
 		m_line_pattern_pen = attr.line_pattern_pen;
@@ -1269,7 +1269,7 @@ Reb_Print(
 	void agg_graphics::agg_init(){
 		//initial settings
 		m_stroke_cap = butt_cap; //butt_cap square_cap round_cap
-		m_stroke_join = miter_join;//miter_join miter_join_revert bevel_join round_join
+		m_stroke_join = miter_join;//miter_join miter_join_revert round_join bevel_join
 		m_dash_cap = butt_cap;
 		m_dash_join = miter_join;
 		m_line_width = 1;
@@ -1294,6 +1294,12 @@ Reb_Print(
 		m_img_filter_mode = FM_NORMAL;
 		m_img_filter_arg = 1.0;
 		m_pattern_mode = 0;
+		m_img_border = 0;
+		m_img_key_color = rgba8(255,255,255,255);
+		m_pattern_x = 0;
+		m_pattern_y = 0;
+		m_pattern_w = 0;
+		m_pattern_h = 0;
 
 		agg_set_gamma(1);
 		m_stroke.inner_join(inner_round);
@@ -1344,11 +1350,10 @@ Reb_Print(
 
 
 	void agg_graphics::agg_line(
-				   double x1, double y1, 
+				   double x1, double y1,
 				   double x2, double y2
 	)
 	{
-		agg_begin_path();
 		m_path.move_to(x1,y1);
 		m_path.line_to(x2,y2);
 	}
@@ -1389,7 +1394,7 @@ Reb_Print(
 
 
 	void agg_graphics::agg_box(
-				   double x1, double y1, 
+				   double x1, double y1,
 				   double x2, double y2
 	)
 	{
@@ -1402,7 +1407,7 @@ Reb_Print(
 	}
 
 	void agg_graphics::agg_rounded_rect(
-				   double x1, double y1, 
+				   double x1, double y1,
 				   double x2, double y2, double r
 	)
 	{
@@ -1460,7 +1465,7 @@ Reb_Print(
 		}
 
 		path_attributes& cattr = curr_attributes();
-		
+
 		//bspline convertor
 		conv_bspline<path_storage> bspline(m_path);
 		bspline.interpolation_step(1.0 / step);
@@ -1475,30 +1480,36 @@ Reb_Print(
 
 	void agg_graphics::agg_end_poly_img (
 		unsigned char *img_buf,
-		int sizX, int sizY, int pw, int ph, int ox, int oy, int outline, int pattern, int r1, int g1, int b1, int a1
+		int sizX, int sizY  //, int pw, int ph, int ox, int oy, int pattern,
 	){
 		path_attributes& cattr = curr_attributes();
+		double x,y,w,h;
+		if (m_pattern_w == 0 || m_pattern_h == 0){
+            m_path.vertex(cattr.index, &x, &y);
+            m_path.vertex(cattr.index+2, &w, &h);
+		}
+
 		cattr.filled = RT_PERSPECTIVE_IMAGE;
 		cattr.coord_x = sizX;
 		cattr.coord_y = sizY;
-		cattr.coord_x2 = ox;
-		cattr.coord_y2 = oy;
-		cattr.coord_x3 = ox + pw;
-		cattr.coord_y3 = oy + ph;
+		cattr.coord_x2 = m_pattern_x; //ox;
+		cattr.coord_y2 = m_pattern_y; //oy;
+		cattr.coord_x3 = m_pattern_x + ((m_pattern_w == 0) ? w - x : m_pattern_w); //ox + pw;
+		cattr.coord_y3 = m_pattern_y + ((m_pattern_h == 0) ? h - y : m_pattern_h); //oy + ph;
 		cattr.img_buf = img_buf;
-		cattr.pattern_mode = pattern;
-		if (outline == 0){
+		cattr.pattern_mode = m_pattern_mode; //pattern;
+		if (m_img_border == 0){ //outline == 0){
 			cattr.dashed = false;
 			cattr.stroked = false;
 		}
-		cattr.g_color1 = rgba8(r1, g1, b1, a1);
+		cattr.g_color1 = m_img_key_color; //rgba8(r1, g1, b1, a1);
 
 		m_path.close_polygon();
 	}
 
 
 	void agg_graphics::agg_gtriangle(
-		REBPAR* p1, REBPAR* p2, REBPAR* p3, REBYTE* c1, REBYTE* c2, REBYTE* c3, double d
+		REBXYF p1, REBXYF p2, REBXYF p3, REBYTE* c1, REBYTE* c2, REBYTE* c3, double d
 	)
 	{
 		//add line points
@@ -1510,20 +1521,20 @@ Reb_Print(
 			cattr.g_color2 = rgba8(c2[0], c2[1], c2[2], 255 - c2[3]);
 			cattr.g_color3 = rgba8(c3[0], c3[1], c3[2], 255 - c3[3]);
 		}
-		
+
 		cattr.coord_x = d; //sets triangle dilation value
 
-		m_path.move_to(p1->x,p1->y);
-		m_path.line_to(p2->x,p2->y);
-		m_path.line_to(p3->x,p3->y);
+		m_path.move_to(p1.x,p1.y);
+		m_path.line_to(p2.x,p2.y);
+		m_path.line_to(p3.x,p3.y);
 		m_path.close_polygon();
 	}
 
 
 	void agg_graphics::agg_image(
 					unsigned char *img_buf,
-				   double oftX, double oftY, 
-				   int sizX, int sizY, int outline, int r1, int g1, int b1, int a1
+				   double oftX, double oftY,
+				   int sizX, int sizY //, int outline, int r1, int g1, int b1, int a1
 	)
 	{
 		m_img_mtx.reset();
@@ -1544,22 +1555,34 @@ Reb_Print(
 		cattr.coord_y = sizY;
 		cattr.img_buf = img_buf;
 		cattr.mtx = m_img_mtx;
-		if (outline == 0){
+		if (m_img_border == 0){ //outline == 0){
 			cattr.dashed = false;
 			cattr.stroked = false;
 		}
-		cattr.g_color1 = rgba8(r1, g1, b1, a1);
+		cattr.g_color1 = m_img_key_color;//rgba8(r1, g1, b1, a1);
+	}
+
+	void agg_graphics::agg_image_options(int r, int g, int b, int a ,int border){
+		m_img_key_color = rgba8(r, g, b, a);
+		m_img_border = border;
+	}
+
+	void agg_graphics::agg_image_pattern(int mode, double x, double y, double w, double h){
+		m_pattern_mode = mode;
+		m_pattern_x = x;
+		m_pattern_y = x;
+		m_pattern_w = w;
+		m_pattern_h = h;
 	}
 
     //------------------------------------------------------------------------
 
 	int agg_graphics::agg_push_mtx()
     {
-//		path_attributes& attr = path_attributes();
-//		agg_get_attributes(attr);
-//        m_stack.add(attr);
-//		return m_stack.size();
-		return 0;
+		path_attributes attr = path_attributes();
+		agg_get_attributes(attr);
+        m_stack.add(attr);
+		return m_stack.size();
     }
 
 
@@ -1575,7 +1598,7 @@ Reb_Print(
 		agg_set_attributes(attr);
 
         m_stack.remove_last();
-		
+
 		return m_stack.size();
     }
 
@@ -1602,7 +1625,7 @@ Reb_Print(
 		m_post_mtx.invert();
 		m_output_mtx = m_resize_mtx;
 	}
-	
+
     void agg_graphics::agg_anti_alias(bool mode)
     {
 		m_anti_aliased = mode;
@@ -1629,7 +1652,7 @@ Reb_Print(
     {
 		m_fill_rule = mode;
 	}
-	
+
     void agg_graphics::agg_stroke_join(line_join_e mode)
     {
 		m_stroke_join = mode;
@@ -1665,23 +1688,22 @@ Reb_Print(
 			m_path.add_vertex(0.0, 0.0, path_cmd_stop); //closes the path as it is not used in future processing...
 	}
 
-	REBINT agg_graphics::agg_text(REBINT vectorial, REBPAR* p1, REBPAR* p2, REBSER* block)
+	REBINT agg_graphics::agg_text(REBINT vectorial, REBXYF* p1, REBXYF* p2, REBSER* block)
 	{
 		agg_begin_path();
 		path_attributes& cattr = curr_attributes();
 
-		int ox, oy;
+		double ox, oy;
 		if (p1) {
 			ox = p1->x;
 			oy = p1->y;
 		} else
 			ox = oy = 0;
 
-
 		if (vectorial){
 			//vectorial
-			int sx,sy;
-			
+			double sx,sy;
+
 			if (p2) {
 				sx = p2->x;
 				sy = p2->y;
@@ -1690,26 +1712,28 @@ Reb_Print(
 				sx = m_actual_width;
 				sy = m_actual_height;
 			}
-#ifdef TEMP_REMOVE
+
 			rich_text* rt = (rich_text*)Rich_Text;
 			rt->rt_reset();
-		
-			rt->rt_attach_buffer(m_buf, sx - ox, sy - oy, m_offset_x, m_offset_y);
 
-			if (p2)	rt->rt_set_clip(ox, oy, sx,sy);
+			rt->rt_attach_buffer(m_buf, (int)(sx - ox), (int)(sy - oy), m_offset_x, m_offset_y);
 
-			REBINT result = -1; //// Text_Gob(rt, block);
-			if (result < 0) return result;
+			if (p2) rt->rt_set_clip((int)ox, (int)oy, (int)sx,(int)sy);
+
+//			REBINT result = Text_Gob(rt, block);
+//			if (result < 0) return result;
+			Text_Gob(rt, block);
 
 			//force to vectors no matter what was in the dialect block
 			rt->rt_text_mode(2);
 			rt->rt_set_graphics(this);
 			rt->rt_draw_text(DRAW_TEXT, p1);
-#endif
+
 //			if (p2) agg_set_clip(cattr.clip_x1, cattr.clip_y1, cattr.clip_x2, cattr.clip_y2);
 
 		} else {
 			//raster
+//			Reb_Print("agg RASTR text %dx%d %dx%d\n", ox, oy, (int)p2->x, (int)p2->y);
 			cattr.filled = RT_TEXT;
 			cattr.block = block;
 			cattr.coord_x = ox;
@@ -1768,7 +1792,7 @@ Reb_Print(
     void agg_graphics::agg_path_quadratic_curve(int rel, double x1, double y1,                   // Q, q
                                double x,  double y)
     {
-        if(rel) 
+        if(rel)
         {
             m_path.rel_to_abs(&x1, &y1);
             m_path.rel_to_abs(&x,  &y);
@@ -1778,7 +1802,7 @@ Reb_Print(
 
     void agg_graphics::agg_path_quadratic_curve_to(int rel, double x, double y)           // T, t
     {
-        if(rel) 
+        if(rel)
         {
 			m_path.curve3_rel(x, y);
 		} else {
@@ -1788,7 +1812,7 @@ Reb_Print(
 
 
     void agg_graphics::agg_path_cubic_curve(int rel, double x1, double y1,                   // C, c
-                               double x2, double y2, 
+                               double x2, double y2,
                                double x,  double y)
     {
         if(rel)
@@ -1804,7 +1828,7 @@ Reb_Print(
     void agg_graphics::agg_path_cubic_curve_to(int rel, double x2, double y2,                   // S, s
                                double x,  double y)
     {
-        if(rel) 
+        if(rel)
         {
 			m_path.curve4_rel(x2, y2, x, y);
 		} else {
@@ -1815,7 +1839,7 @@ Reb_Print(
 
     void agg_graphics::agg_path_arc(int rel, double rx, double ry,                   // A, c
 							  double angle,
-                              int large_arc, 
+                              int large_arc,
                               int sweep,
 							  double x,  double y)
     {
@@ -1828,7 +1852,7 @@ Reb_Print(
 			large_arc_flag = true;
 		}
 		angle =  fmod(angle, 360) * pi / 180.0;
-        if(!rel) 
+        if(!rel)
         {
 			m_path.arc_to(
                               rx,ry,
@@ -1836,7 +1860,7 @@ Reb_Print(
                               large_arc_flag,
                               sweep_flag,
                               x, y);
-		} else {	
+		} else {
 			m_path.arc_rel(
                               rx,ry,
 							  angle,

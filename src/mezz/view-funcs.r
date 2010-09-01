@@ -39,11 +39,11 @@ view: func [
 	if not screen: system/view/screen-gob [return none]
 
 	; Convert option block to a map:
-	opts: make map! 4
+	opts: make map! any [reduce/no-set opts []]
 	case/all [
 		no-wait [opts/no-wait: true]
 		as-is   [opts/as-is: true]
-		options [append opts reduce/no-set opts]
+;		options [append opts reduce/no-set opts]
 	]
 
 	; GOB based view:

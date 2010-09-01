@@ -78,7 +78,7 @@ namespace agg
                 m_max_len = max_len;
             }
             m_last_x   = 0x7FFFFFF0;
-            m_cur_span = m_spans;
+            m_cur_span = &m_spans[0];
         }
 
         //--------------------------------------------------------------------
@@ -129,13 +129,13 @@ namespace agg
         void reset_spans()
         {
             m_last_x    = 0x7FFFFFF0;
-            m_cur_span  = m_spans;
+            m_cur_span  = &m_spans[0];
         }
 
         //--------------------------------------------------------------------
         int            y()         const { return m_y; }
-        unsigned       num_spans() const { return unsigned(m_cur_span - m_spans); }
-        const_iterator begin()     const { return m_spans + 1; }
+        unsigned       num_spans() const { return unsigned(m_cur_span - &m_spans[0]); }
+        const_iterator begin()     const { return &m_spans[1]; }
 
     private:
         scanline_bin(const scanline_bin&);

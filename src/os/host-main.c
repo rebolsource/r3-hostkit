@@ -43,9 +43,7 @@
 #include "reb-host.h"		// standard host include files
 #include "host-lib.h"		// OS host library (dispatch table)
 
-//#include "rebol-lib.h"		// REBOL library (function prototypes)
-
-#include "host-init.c"
+#include "host-init.h"
 
 /**********************************************************************/
 
@@ -74,7 +72,7 @@ void Put_Str(char *buf);
 REBYTE *Get_Str();
 
 void Host_Crash(REBYTE *reason) {
-	OS_Crash("REBOL host failure", reason);
+	OS_Crash("REBOL Host Failure", reason);
 }
 
 
@@ -124,13 +122,18 @@ int main(int argc, char **argv)
 	vers[0] = 5; // len
 	RL_Version(&vers[0]);
 
+	// Must be done before an console I/O can occur. Does not use reb-lib,
+	// so this device should open even if there are other problems.
 	Open_StdIO();  // also sets up interrupt handler
 
-	// Initialize the REBOL library:
+	// Initialize the REBOL library (reb-lib):
+	if (!CHECK_STRUCT_ALIGN) Host_Crash("Incompatible struct alignment");
 	if (!Host_Lib) Host_Crash("Missing host lib");
+	// !!! Second part will become vers[2] < RL_REV on release!!!
+	if (vers[1] != RL_VER || vers[2] != RL_REV) Host_Crash("Incompatible reb-lib DLL");
 	n = RL_Init(&Main_Args, Host_Lib);
-	if (n == 1) Host_Crash("REBOL DLL wrong size");
-	if (n == 2) Host_Crash("REBOL DLL wrong version/checksum");
+	if (n == 1) Host_Crash("Host-lib wrong size");
+	if (n == 2) Host_Crash("Host-lib wrong version/checksum");
 
 #ifndef CORE_ONLY
 	Init_Windows();
@@ -142,7 +145,7 @@ int main(int argc, char **argv)
 #endif
 
 	// Initialize host bundled source code:
-	RL_Do_Binary((REBYTE *)(&Reb_Init_Code[0]), REB_INIT_SIZE, 0, 0);
+	RL_Do_Binary((REBYTE *)(&Reb_Init_Code[0]), REB_INIT_SIZE, 0, 0, 0);
 
 	// Run REBOL's mezzanine bootstrap:
 	n = (Main_Args.options & RO_NO_BOOT) ? TRUE : RL_Start(0); // TRUE on halt
@@ -156,7 +159,7 @@ int main(int argc, char **argv)
 		while (TRUE) {
 			Put_Str(PROMPT_STR);
 			if ((line = Get_Str())) {
-				RL_Do_String(line);
+				RL_Do_String(line, 0, 0);
 				RL_Print_TOS(0, RESULT_STR);
 				OS_Free(line);
 			}

@@ -33,7 +33,7 @@
 #include <math.h>
 
 #include "reb-host.h"
-#include "host-lib.h" 
+#include "host-lib.h"
 
 #ifndef NO_COMPOSITOR
 #include "agg-compositor.h"
@@ -64,13 +64,12 @@ extern void* Create_Effects();
 static BOOL Registered = FALSE;		// Window has been registered
 static const REBCHR *Window_Class_Name = TXT("REBOLWindow");
 static struct gob_window *Gob_Windows;
-static REBOOL Custom_Cursor = FALSE;
 
 REBGOB *Gob_Root;				// Top level GOB (the screen)
 HCURSOR Cursor;					// active cursor image object
 //REBOL_OS_METRICS Metrics;		// window system metrics (sizes, etc.)
 REBPAR Zero_Pair = {0, 0};
-void* Rich_Text; // temp
+//void* Rich_Text; // temp
 //void* Effects;
 
 
@@ -211,7 +210,7 @@ static void Free_Window(REBGOB *gob) {
 
 /***********************************************************************
 **
-*/  BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) 
+*/  BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 /*
 **		Callback function which enables/disables events in windows
 **		specified by lParam
@@ -252,6 +251,7 @@ static void Free_Window(REBGOB *gob) {
 	REBCHR *title;
 	int x, y, w, h;
 	HWND parent = NULL;
+	REBYTE osString = FALSE;
 
 	if (!Registered) Register_Window();
 
@@ -267,7 +267,7 @@ static void Free_Window(REBGOB *gob) {
 	SET_GOB_STATE(gob, GOBS_NEW);
 
 	// Setup window options:
-	
+
 	options = WS_POPUP;
 
 // Note: Metrics temporarily disabled in A100
@@ -297,7 +297,11 @@ static void Free_Window(REBGOB *gob) {
 		}
 	}
 
-	title = IS_GOB_STRING(gob) ? As_OS_Str(GOB_STRING(gob)) : TXT("REBOL Window");
+	if (IS_GOB_STRING(gob)) {
+	    title = As_OS_Str(GOB_STRING(gob));
+	    osString = TRUE; //make the string don't leak
+    } else
+        title = TXT("REBOL Window");
 
 	if (GET_GOB_FLAG(gob, GOBF_POPUP)) {
 		parent = GOB_HWIN(GOB_TMP_OWNER(gob));
@@ -318,6 +322,9 @@ static void Free_Window(REBGOB *gob) {
 		NULL, App_Instance, NULL
 	);
 
+    //this needs to be improved when GOB_STRING return unicode/bytes flag in some way
+    if (osString)
+        OS_Free(title);
 	if (!window) Host_Crash("CreateWindow failed");
 
 	// Enable drag and drop
@@ -422,6 +429,8 @@ static void Free_Window(REBGOB *gob) {
 	REBCNT opts = 0;
 	HWND window;
 	WINDOWINFO wi;
+	REBCHR *title;
+
 	wi.cbSize = sizeof(WINDOWINFO);
 
 	if (!IS_WINDOW(gob)) return;
@@ -451,8 +460,12 @@ static void Free_Window(REBGOB *gob) {
 	//if (opts)
 //		SetWindowPos(window, 0, GOB_X(gob), GOB_Y(gob), GOB_W(gob), GOB_H(gob), opts | SWP_NOZORDER);
 
-	if (IS_GOB_STRING(gob))
-		SetWindowText(window, As_OS_Str(GOB_STRING(gob)));
+	if (IS_GOB_STRING(gob)){
+        title = As_OS_Str(GOB_STRING(gob));
+		SetWindowText(window, title);
+		//don't let the converted string leak! - will be changed once GOB_STRING returns unicode/bytes flag
+        OS_Free(title);
+    }
 
 	/*
 	switch (arg) {
@@ -510,7 +523,7 @@ static void Free_Window(REBGOB *gob) {
 		d.x, d.y + dsize.y - 1, dsize.x, -dsize.y,
 		s.x, s.y + ssize.y + 1, ssize.x, -ssize.y,
 		src, &BitmapInfo, DIB_PAL_COLORS, SRCCOPY);
-	
+
 //	Reb_Print("blit: %dx%d %dx%d %dx%d %dx%d" ,d.x, d.y + dsize.y - 1, dsize.x, -dsize.y,s.x, ssize.y + s.y + 1, ssize.x, -ssize.y);
 
 	SetStretchBltMode(hdc, mode);
@@ -533,7 +546,7 @@ static void Free_Window(REBGOB *gob) {
 
 	if (!IS_WINDOW(gob)) return;
 
-	clr = ((color >> 16) & 255) | ((color & 255) << 16) | (color & 255<<8); 
+	clr = ((color >> 16) & 255) | ((color & 255) << 16) | (color & 255<<8);
 
 	hdc = GetDC(GOB_HWIN(gob));
 

@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: Extension Types (Isolators)
-**  Build: A105
-**  Date:  1-Sep-2010
+**  Build: A106
+**  Date:  8-Sep-2010
 **  File:  ext-types.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-boot.r)
@@ -36,12 +36,12 @@ enum REBOL_Ext_Types
     RXT_GET_WORD,			// 15
     RXT_LIT_WORD,			// 16
     RXT_REFINEMENT,			// 17
-    RXT_STRING = 24,		// 18
-    RXT_FILE,				// 19
-    RXT_EMAIL,				// 20
-    RXT_URL,				// 21
-    RXT_TAG,				// 22
-    RXT_ISSUE,				// 23
+    RXT_ISSUE,				// 18
+    RXT_STRING = 24,		// 19
+    RXT_FILE,				// 20
+    RXT_EMAIL,				// 21
+    RXT_URL,				// 22
+    RXT_TAG,				// 23
     RXT_BLOCK = 32,			// 24
     RXT_PAREN,				// 25
     RXT_PATH,				// 26

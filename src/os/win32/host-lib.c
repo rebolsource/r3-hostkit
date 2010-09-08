@@ -524,20 +524,21 @@ static void *Task_Ready;
 
 /***********************************************************************
 **
-*/	int OS_Create_Process(REBCHR *call, int reserved)
+*/	int OS_Create_Process(REBCHR *call, u32 flags)
 /*
 **		Return zero on error.
+**		For right now, set flags to 1 for /wait.
 **
 ***********************************************************************/
 {
 	STARTUPINFO			si;
 	PROCESS_INFORMATION	pi;
-	REBOOL				is_NT;
-	OSVERSIONINFO		info;
+//	REBOOL				is_NT;
+//	OSVERSIONINFO		info;
 	REBINT				result;
 
-	GetVersionEx(&info);
-	is_NT = info.dwPlatformId >= VER_PLATFORM_WIN32_NT;
+//	GetVersionEx(&info);
+//	is_NT = info.dwPlatformId >= VER_PLATFORM_WIN32_NT;
 
 	si.cb = sizeof(si);
 	si.lpReserved = NULL;
@@ -559,14 +560,24 @@ static void *Task_Ready;
 		NULL,						// Process security attributes
 		NULL,						// Thread security attributes
 		FALSE,						// Inherit handles
-		CREATE_DEFAULT_ERROR_MODE,	// Creation flags
+		NORMAL_PRIORITY_CLASS		// Creation flags
+		| CREATE_DEFAULT_ERROR_MODE,
 		NULL,						// Environment
 		NULL,						// Current directory
 		&si,						// Startup information
 		&pi							// Process information
 	);
 
-	return result;
+	// Wait for termination:
+	if (result && (flags & 1)) {
+		result = 0;
+		WaitForSingleObject(pi.hProcess, INFINITE); // check result??
+		GetExitCodeProcess(pi.hProcess, (PDWORD)&result);
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+	}
+
+	return result;  // meaning depends on flags
 }
 
 

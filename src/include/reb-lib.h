@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: REBOL Host and Extension API
-**  Build: A105
-**  Date:  1-Sep-2010
+**  Build: A106
+**  Date:  8-Sep-2010
 **  File:  reb-lib.r
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-reb-lib.r)
@@ -20,7 +20,7 @@
 // for compatiblity with the reb-lib DLL (using RL_Version.)
 #define RL_VER 2
 #define RL_REV 100
-#define RL_UPD 105
+#define RL_UPD 106
 
 // Compatiblity with the lib requires that structs are aligned using the same
 // method. This is concrete, not abstract. The macro below uses struct

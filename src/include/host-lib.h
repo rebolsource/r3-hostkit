@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: Host Access Library
-**  Build: A105
-**  Date:  1-Sep-2010
+**  Build: A106
+**  Date:  8-Sep-2010
 **  File:  host-lib.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-os-ext.r)
@@ -16,8 +16,8 @@
 ***********************************************************************/
 
 
-#define HOST_LIB_VER 105
-#define HOST_LIB_SUM 5782
+#define HOST_LIB_VER 106
+#define HOST_LIB_SUM 10569
 #define HOST_LIB_SIZE 30
 
 
@@ -45,7 +45,7 @@ typedef struct REBOL_Host_Lib {
 	REBINT (*os_create_thread)(CFUNC init, void *arg, REBCNT stack_size);
 	void (*os_delete_thread)(void);
 	void (*os_task_ready)(REBINT tid);
-	int (*os_create_process)(REBCHR *call, int reserved);
+	int (*os_create_process)(REBCHR *call, u32 flags);
 	int (*os_browse)(REBCHR *url, int reserved);
 	BOOL (*os_request_file)(REBRFR *fr);
 	int (*os_call_device)(REBINT device, REBCNT command);
@@ -81,7 +81,7 @@ extern void *OS_Find_Function(void *dll, char* funcname);    // host-lib.c
 extern REBINT OS_Create_Thread(CFUNC init, void *arg, REBCNT stack_size);    // host-lib.c
 extern void OS_Delete_Thread(void);    // host-lib.c
 extern void OS_Task_Ready(REBINT tid);    // host-lib.c
-extern int OS_Create_Process(REBCHR *call, int reserved);    // host-lib.c
+extern int OS_Create_Process(REBCHR *call, u32 flags);    // host-lib.c
 extern int OS_Browse(REBCHR *url, int reserved);    // host-lib.c
 extern BOOL OS_Request_File(REBRFR *fr);    // host-lib.c
 extern int OS_Call_Device(REBINT device, REBCNT command);    // ../host-device.c

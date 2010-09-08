@@ -1,8 +1,8 @@
 REBOL 3 Host-Kit Source Distribution
 From REBOL Technologies in Ukiah, California
 
-    Version: 2.100.105.0.0  (alpha)
-    Updated: 1-Sep-2010/9:55:48-7:00 
+    Version: 2.100.106.0.0  (alpha)
+    Updated: 8-Sep-2010/12:45:20-7:00 
 
 PURPOSE:
 

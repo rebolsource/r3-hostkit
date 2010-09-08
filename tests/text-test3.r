@@ -79,13 +79,13 @@ window: view/options win [
 				]
 				down [
 					print [
-						"otc:" otc: offset-to-caret gobt event/offset
+						"otc:" mold otc: offset-to-caret gobt event/offset
 						newline
-						"cto:" cto: caret-to-offset gobt to-integer otc/x to-integer otc/y
+						"cto:" mold cto: caret-to-offset gobt otc otc/1						
 						newline
-						"otc2:" offset-to-caret gobt cto
+						"otc2:" mold otc2: offset-to-caret gobt cto
 					]
-					caret-obj/caret: reduce [at gobt/text otc/1 at first at gobt/text otc/1 otc/2]
+					caret-obj/caret: reduce [otc2 otc2/1]
 				]
 				alt-down [
 				]

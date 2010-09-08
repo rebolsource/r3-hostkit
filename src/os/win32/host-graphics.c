@@ -182,12 +182,15 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
     case CMD_GRAPHICS_OFFSET_TO_CARET:
         if (Rich_Text) {
             REBINT element = 0, position = 0;
-            rt_offset_to_caret(Rich_Text, (REBGOB*)RXA_SERIES(frm, 1), RXA_PAIR(frm, 2), &element, &position);
-//            RL_Print("OTC: %d, %d\n", element, position);
-            REBSER* dialect = (REBSER *)GOB_CONTENT((REBGOB*)RXA_SERIES(frm, 1));
-            REBSER* block = RL_MAKE_BLOCK(RL_SERIES(dialect, RXI_SER_TAIL));
+            REBSER* dialect;
+            REBSER* block;
             RXIARG val, str;
             REBCNT n, type;
+
+            rt_offset_to_caret(Rich_Text, (REBGOB*)RXA_SERIES(frm, 1), RXA_PAIR(frm, 2), &element, &position);
+//            RL_Print("OTC: %d, %d\n", element, position);
+            dialect = (REBSER *)GOB_CONTENT((REBGOB*)RXA_SERIES(frm, 1));
+            block = RL_MAKE_BLOCK(RL_SERIES(dialect, RXI_SER_TAIL));
             for (n = 0; type = RL_GET_VALUE(dialect, n, &val); n++) {
                 if (n == element) val.index = position;
                 RL_SET_VALUE(block, n, val, type);

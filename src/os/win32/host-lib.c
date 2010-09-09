@@ -657,3 +657,16 @@ static void *Task_Ready;
 
 	return ret;
 }
+
+
+/***********************************************************************
+**
+*/	REBSER *OS_GOB_To_Image(REBGOB *gob)
+/*
+**		Render a GOB into an image. Returns an image or zero if
+**		it cannot be done.
+**
+***********************************************************************/
+{
+	return 0;
+}

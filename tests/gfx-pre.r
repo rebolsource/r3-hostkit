@@ -1,7 +1,7 @@
 REBOL [
 	title: "REBOL Graphics proprocessors for DRAW, SHAPE and TEXT dialects"
 	author: "Richard 'Cyphre' Smolak"
-	version: 0.0.8
+	version: 0.0.9
 ]
 
 context [
@@ -84,8 +84,10 @@ context [
 			| 'repeat
 			| 'reflect
 			| pair!
+;			| pair!
 			| pair!
-			| pair!
+			| number!
+			| number!
 			| number!
 			| logic!
 			| block!
@@ -494,6 +496,7 @@ context [
 					][
 						none
 					]
+					all [draw-arg append draw-arg [| none! (any-arg?: true)]]
 				)
 				any [
 					(any-arg?: false) set a draw-arg (
@@ -562,10 +565,11 @@ context [
 								any [args/word!/1 'linear]
 								any [args/word!/2 'normal]
 								any [args/pair!/1 0x0]
-								any [args/pair!/2 0x100]
-								any [args/integer!/1 args/decimal!/1 0]
+;								any [args/pair!/2 0x100]
+								as-pair any [args/integer!/1 args/decimal!/1 0] any [args/integer!/2 args/decimal!/2 100]
+								any [args/integer!/3 args/decimal!/3 0]
 								any [args/pair!/3 1x1]
-								args/block!/1
+								args/block!
 							]
 						]
 						image [
@@ -600,7 +604,7 @@ context [
 							['line-pattern args/tuple!/1 args/block!/1]
 						]
 						line-width [
-							['line-width any [args/integer!/1 args/decimal!/1] any [args/word!/1 'variable]]
+							['line-width any [args/integer!/1 args/decimal!/1 1] any [args/word!/1 'variable]]
 						]
 						invert-matrix [
 							['invert-matrix]

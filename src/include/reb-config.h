@@ -16,10 +16,58 @@
 
 #include "reb-to.h"		// build target (#define TO_osname)
 
+/** Primary Configuration **********************************************
+
+The primary target system is defined by:
+
+	TO_target		- for example TO_WIN32 or TO_LINUX
+
+The default config builds an R3 HOST executable program.
+
+To change the config, host-kit developers can define:
+
+	REB_EXT			- build an extension module
+					  * create a DLL, not a host executable
+					  * do not export a host lib (OS_ lib)
+					  * call r3lib via struct and macros
+
+	REB_CORE		- build /core only, no graphics, windows, etc.
+
+Special internal defines used by RT, not Host-Kit developers:
+
+	REB_API			- build r3lib as API
+					  * export r3lib functions
+					  * build r3lib dispatch table
+					  * call host lib (OS_) via struct and macros
+
+	REB_EXE			- build r3 as a standalone executable
+
+	REB_DEF			- special includes, symbols, and tables
+
+These are now obsolete (as of A107) and should be removed:
+
+	REB_LIB
+	CORE_ONLY
+	REBOL_ONLY
+	FULL_DEFS
+	AS_LIB
+
+*/
+
 //* Common *************************************************************
 
 #define INT_64_MODE				// 64 bit integer datatype
 #define THREADED				// enable threads
+
+#ifdef REB_EXE					// standalone exe from RT
+#define RL_API
+#else
+#ifdef REB_API					// r3lib dll from RT
+#define RL_API API_EXPORT
+#else
+#define RL_API API_IMPORT		// for host exe (not used for extension dlls)
+#endif
+#endif
 
 
 //* MS Windows 32 ******************************************************
@@ -58,6 +106,7 @@
 #pragma warning(disable : 4201)		// nameless unions
 #pragma warning(disable : 4100)		// unreferenced formal parameter
 #pragma warning(disable : 4127)		// conditional expression is constant
+#pragma warning(disable : 4244)		// float conversion - temporary
 //#pragma warning(disable : 4057)
 //#pragma warning(disable : 4701)
 
@@ -131,17 +180,3 @@
 #ifndef OS_CRLF
 #define OS_CRLF FALSE
 #endif
-
-#ifdef REBOL_HOST
-#define REB_LIB
-#endif
-
-#ifdef REBOL_ONLY
-#define RL_API
-#else
-#ifdef REBOL_EXPORTS
-#define RL_API API_EXPORT	// for REBOL library build
-#else
-#define RL_API API_IMPORT	// for host files when DLL used
-#endif
-#endif // REBOL_ONLY

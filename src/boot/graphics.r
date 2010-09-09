@@ -6,6 +6,23 @@ REBOL [
 	; Run make-host-ext.r to convert to host-ext-graphics.h
 ]
 
+words: [
+	;gui-metric
+    screen-size
+    border-size
+    border-fixed
+    title-size
+    work-origin
+    work-size
+]
+
+;temp hack - will be removed later
+init-words: command [
+	words [block!]
+]
+
+init-words words
+
 init: command [
 	"Initialize graphics subsystem."
 	gob [gob!] "The screen gob (root gob)"
@@ -45,6 +62,10 @@ draw: command [
 	commands [block!] "Draw commands"
 ]
 
+gui-metric: command [
+	"Returns specific gui related metric setting."
+	keyword [word!] "Available keywords: SCREEN-SIZE, BORDER-SIZE, BORDER-FIXED, TITLE-SIZE, WORK-ORIGIN and WORK-SIZE."
+]
 
 ;#not-yet-used [
 ;

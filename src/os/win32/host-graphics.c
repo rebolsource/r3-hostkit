@@ -48,6 +48,7 @@ static REBOOL Custom_Cursor = FALSE;
 static u32* draw_ext_words;
 static u32* shape_ext_words;
 static u32* text_ext_words;
+static u32* graphics_ext_words;
 
 void* Rich_Text;
 
@@ -184,7 +185,7 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
             REBINT element = 0, position = 0;
             REBSER* dialect;
             REBSER* block;
-            RXIARG val, str;
+            RXIARG val; //, str;
             REBCNT n, type;
 
             rt_offset_to_caret(Rich_Text, (REBGOB*)RXA_SERIES(frm, 1), RXA_PAIR(frm, 2), &element, &position);
@@ -284,6 +285,63 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
         }
         break;
 
+    case CMD_GRAPHICS_GUI_METRIC:
+        {
+            REBINT x,y;
+            u32 w = RL_FIND_WORD(graphics_ext_words,RXA_WORD(frm, 1));
+
+            switch(w)
+            {
+                case W_GRAPHICS_SCREEN_SIZE:
+                    x = GetSystemMetrics(SM_CXSCREEN);
+                    y = GetSystemMetrics(SM_CYSCREEN);
+                    break;
+
+                case W_GRAPHICS_TITLE_SIZE:
+                    x = 0;
+                    y = GetSystemMetrics(SM_CYCAPTION);
+                    break;
+
+                case W_GRAPHICS_BORDER_SIZE:
+                    x = GetSystemMetrics(SM_CXSIZEFRAME);
+                    y = GetSystemMetrics(SM_CYSIZEFRAME);
+                    break;
+
+                case W_GRAPHICS_BORDER_FIXED:
+                    x = GetSystemMetrics(SM_CXFIXEDFRAME);
+                    y = GetSystemMetrics(SM_CYFIXEDFRAME);
+                    break;
+
+                case W_GRAPHICS_WORK_ORIGIN:
+                    {
+                        RECT rect;
+                        SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                        x = rect.left;
+                        y = rect.top;
+                    }
+                    break;
+
+                case W_GRAPHICS_WORK_SIZE:
+                    {
+                        RECT rect;
+                        SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+                        x = rect.right;
+                        y = rect.bottom;
+                    }
+                    break;
+            }
+
+            if (w){
+                RXA_PAIR(frm, 1).x = x;
+                RXA_PAIR(frm, 1).y = y;
+                RXA_TYPE(frm, 1) = RXT_PAIR;
+            } else {
+                RXA_TYPE(frm, 1) = RXT_NONE;
+            }
+            return RXR_VALUE;
+        }
+        break;
+
 	case CMD_GRAPHICS_INIT:
 		Gob_Root = (REBGOB*)RXA_SERIES(frm, 1); // system/view/screen-gob
 		Gob_Root->size.x = (REBD32)GetSystemMetrics(SM_CXSCREEN);
@@ -294,6 +352,11 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
 		Rich_Text = Create_RichText();
 
 		break;
+
+    case CMD_GRAPHICS_INIT_WORDS:
+        //temp hack - will be removed later
+        graphics_ext_words = RL_MAP_WORDS(RXA_SERIES(frm,1));
+        break;
 
 	default:
 		return RXR_NO_COMMAND;
@@ -414,7 +477,7 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
        break;
 
     case CMD_TEXT_DROP:
-        rt_drop(ctx->envr, RXA_INT64(frm,1));
+        rt_drop(ctx->envr, RXA_INT32(frm,1));
         break;
 
     case CMD_TEXT_FONT:
@@ -637,11 +700,11 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
 		break;
 
     case CMD_TEXT_SHADOW:
-        rt_shadow(ctx->envr, RXA_PAIR(frm, 1), RXA_TUPLE(frm,2) + 1, RXA_INT64(frm,3));
+        rt_shadow(ctx->envr, RXA_PAIR(frm, 1), RXA_TUPLE(frm,2) + 1, RXA_INT32(frm,3));
         break;
 
 	case CMD_TEXT_SIZE:
-		rt_font_size(ctx->envr, RXA_INT64(frm,1));
+		rt_font_size(ctx->envr, RXA_INT32(frm,1));
 		break;
 
     case CMD_TEXT_TEXT:
@@ -870,9 +933,9 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
 
 	case CMD_DRAW_FILL_PEN:
 		{
-   			REBYTE* val;
-			REBCNT type;
-			REBSER* img;
+   			//REBYTE* val;
+			//REBCNT type;
+			//REBSER* img;
 
         if (RXA_TYPE(frm, 1) == RXT_TUPLE)
             agg_fill_pen(ctx->envr, RXA_TUPLE(frm, 1)+1);
@@ -1098,7 +1161,7 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
                             agg_begin_poly(ctx->envr, val.pair);
                     }
                 }
-                agg_end_spline(ctx->envr, RXA_INT64(frm, 2), RL_FIND_WORD(draw_ext_words , RXA_WORD(frm, 3)) - W_DRAW_OPENED);
+                agg_end_spline(ctx->envr, RXA_INT32(frm, 2), RL_FIND_WORD(draw_ext_words , RXA_WORD(frm, 3)) - W_DRAW_OPENED);
             }
 
 		}
@@ -1167,36 +1230,6 @@ RL_LIB *RL; // Link back to reb-lib from embedded extensions
 }
 
 #ifdef OLD__FUNCS_NEED_CONVERSION
-
-
-
-/***********************************************************************
-**
-*/  void OS_GUI_Metrics(REBOL_OS_METRICS *met)
-/*
-**      Provide info about the hosting GUI.
-**
-***********************************************************************/
-{
-	RECT rect;
-
-	met->screen_size.x  = GetSystemMetrics(SM_CXSCREEN);
-	met->screen_size.y  = GetSystemMetrics(SM_CYSCREEN);
-	met->title_size.x   = 0;
-	met->title_size.y   = GetSystemMetrics(SM_CYCAPTION);
-	met->border_size.x  = GetSystemMetrics(SM_CXSIZEFRAME);
-	met->border_size.y  = GetSystemMetrics(SM_CYSIZEFRAME);
-	met->border_fixed.x = GetSystemMetrics(SM_CXFIXEDFRAME);
-	met->border_fixed.y = GetSystemMetrics(SM_CYFIXEDFRAME);
-	if (SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0)) {
-		met->work_origin.x = rect.left;
-		met->work_origin.y = rect.top;
-		met->work_size.x = rect.right;
-		met->work_size.y = rect.bottom;
-	}
-
-	Metrics = *met;
-}
 
 /***********************************************************************
 **

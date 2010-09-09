@@ -1,10 +1,10 @@
-﻿REBOL [Title: "Basic TEXT test"]
+REBOL [Title: "Basic TEXT test"]
 
 do %gfx-pre.r
 
 win-size: 420x640
 ;;; WINDOW
-win: make gob! reduce/no-set [offset: 200x20 size: 10 + win-size]
+win: make gob! reduce/no-set [offset: 200x20 size: win-size]
 
 ;;; background GOB
 gobb: make gob! []

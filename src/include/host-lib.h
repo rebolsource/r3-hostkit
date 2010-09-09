@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: Host Access Library
-**  Build: A106
-**  Date:  8-Sep-2010
+**  Build: A107
+**  Date:  9-Sep-2010
 **  File:  host-lib.h
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-os-ext.r)
@@ -16,9 +16,9 @@
 ***********************************************************************/
 
 
-#define HOST_LIB_VER 106
-#define HOST_LIB_SUM 10569
-#define HOST_LIB_SIZE 30
+#define HOST_LIB_VER 107
+#define HOST_LIB_SUM 62628
+#define HOST_LIB_SIZE 31
 
 
 typedef struct REBOL_Host_Lib {
@@ -48,6 +48,7 @@ typedef struct REBOL_Host_Lib {
 	int (*os_create_process)(REBCHR *call, u32 flags);
 	int (*os_browse)(REBCHR *url, int reserved);
 	BOOL (*os_request_file)(REBRFR *fr);
+	REBSER *(*os_gob_to_image)(REBGOB *gob);
 	int (*os_call_device)(REBINT device, REBCNT command);
 	int (*os_do_device)(REBREQ *req, REBCNT command);
 	REBREQ *(*os_make_devreq)(int device);
@@ -58,7 +59,7 @@ typedef struct REBOL_Host_Lib {
 
 //** Included by HOST *********************************************
 
-#ifndef AS_LIB
+#ifndef REB_DEF
 
 extern void *OS_Make(size_t size);    // host-lib.c
 extern void OS_Free(void *mem);    // host-lib.c
@@ -84,6 +85,7 @@ extern void OS_Task_Ready(REBINT tid);    // host-lib.c
 extern int OS_Create_Process(REBCHR *call, u32 flags);    // host-lib.c
 extern int OS_Browse(REBCHR *url, int reserved);    // host-lib.c
 extern BOOL OS_Request_File(REBRFR *fr);    // host-lib.c
+extern REBSER *OS_GOB_To_Image(REBGOB *gob);    // host-lib.c
 extern int OS_Call_Device(REBINT device, REBCNT command);    // ../host-device.c
 extern int OS_Do_Device(REBREQ *req, REBCNT command);    // ../host-device.c
 extern REBREQ *OS_Make_Devreq(int device);    // ../host-device.c
@@ -122,6 +124,7 @@ REBOL_HOST_LIB Host_Lib_Init = {  // Host library function vector table.
 	OS_Create_Process,
 	OS_Browse,
 	OS_Request_File,
+	OS_GOB_To_Image,
 	OS_Call_Device,
 	OS_Do_Device,
 	OS_Make_Devreq,
@@ -132,7 +135,7 @@ REBOL_HOST_LIB Host_Lib_Init = {  // Host library function vector table.
 
 #endif //OS_LIB_TABLE 
 
-#else //AS_LIB
+#else //REB_DEF
 
 //** Included by REBOL ********************************************
 
@@ -162,6 +165,7 @@ extern	REBOL_HOST_LIB *Host_Lib;
 #define OS_CREATE_PROCESS(a,b)      Host_Lib->os_create_process(a,b)
 #define OS_BROWSE(a,b)              Host_Lib->os_browse(a,b)
 #define OS_REQUEST_FILE(a)          Host_Lib->os_request_file(a)
+#define OS_GOB_TO_IMAGE(a)          Host_Lib->os_gob_to_image(a)
 #define OS_CALL_DEVICE(a,b)         Host_Lib->os_call_device(a,b)
 #define OS_DO_DEVICE(a,b)           Host_Lib->os_do_device(a,b)
 #define OS_MAKE_DEVREQ(a)           Host_Lib->os_make_devreq(a)
@@ -169,4 +173,4 @@ extern	REBOL_HOST_LIB *Host_Lib;
 #define OS_POLL_DEVICES()           Host_Lib->os_poll_devices()
 #define OS_WAIT(a,b)                Host_Lib->os_wait(a,b)
 
-#endif //AS_LIB
+#endif //REB_DEF

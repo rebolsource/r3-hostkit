@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: REBOL Graphics - DRAW commands
-**  Build: A106
-**  Date:  8-Sep-2010
+**  Build: A107
+**  Date:  9-Sep-2010
 **  File:  host-ext-draw
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-host-ext.r)

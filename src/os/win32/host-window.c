@@ -67,9 +67,7 @@ static struct gob_window *Gob_Windows;
 
 REBGOB *Gob_Root;				// Top level GOB (the screen)
 HCURSOR Cursor;					// active cursor image object
-//REBOL_OS_METRICS Metrics;		// window system metrics (sizes, etc.)
 REBPAR Zero_Pair = {0, 0};
-//void* Rich_Text; // temp
 //void* Effects;
 
 
@@ -252,6 +250,7 @@ static void Free_Window(REBGOB *gob) {
 	int x, y, w, h;
 	HWND parent = NULL;
 	REBYTE osString = FALSE;
+    REBPAR metric;
 
 	if (!Registered) Register_Window();
 
@@ -270,30 +269,33 @@ static void Free_Window(REBGOB *gob) {
 
 	options = WS_POPUP;
 
-// Note: Metrics temporarily disabled in A100
-
 	if (!GET_FLAGS(gob->flags, GOBF_NO_TITLE, GOBF_NO_BORDER)) {
+	    metric.y = GetSystemMetrics(SM_CYCAPTION);
 		options |= WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU;
-//		h += Metrics.title_size.y;
-//		y -= Metrics.title_size.y;
+		h += metric.y;
+		y -= metric.y;
 	}
 
 	if (GET_GOB_FLAG(gob, GOBF_RESIZE)) {
+	    metric.x = GetSystemMetrics(SM_CXSIZEFRAME);
+	    metric.y = GetSystemMetrics(SM_CYSIZEFRAME);
 		options |= WS_SIZEBOX | WS_BORDER;
-//		x -= Metrics.border_size.x;
-//		y -= Metrics.border_size.y;
-//		w += Metrics.border_size.x * 2;
-//		h += Metrics.border_size.y * 2;
+		x -= metric.x;
+		y -= metric.y;
+		w += metric.x * 2;
+		h += metric.y * 2;
 		if (!GET_GOB_FLAG(gob, GOBF_NO_TITLE))
 			options |= WS_MAXIMIZEBOX;
 	}
 	else if (!GET_GOB_FLAG(gob, GOBF_NO_BORDER)) {
+	    metric.x = GetSystemMetrics(SM_CXFIXEDFRAME);
+	    metric.y = GetSystemMetrics(SM_CYFIXEDFRAME);
 		options |= WS_BORDER;
 		if (!GET_GOB_FLAG(gob, GOBF_NO_TITLE)){
-//			x -= Metrics.border_fixed.x;
-//			y -= Metrics.border_fixed.y;
-//			w += Metrics.border_fixed.x * 2;
-//			h += Metrics.border_fixed.y * 2;
+			x -= metric.x;
+			y -= metric.y;
+			w += metric.x * 2;
+			h += metric.y * 2;
 		}
 	}
 

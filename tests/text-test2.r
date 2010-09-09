@@ -4,7 +4,7 @@ do %gfx-pre.r
 
 win-size: 420x600
 ;;; WINDOW
-win: make gob! reduce/no-set [offset: 200x20 size: 10 + win-size]
+win: make gob! reduce/no-set [offset: 200x20 size: win-size]
 
 ;;; background GOB
 gobb: make gob! []

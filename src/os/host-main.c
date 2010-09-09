@@ -56,7 +56,7 @@ REBARGS Main_Args;
 HINSTANCE App_Instance = 0;
 #endif
 
-#ifndef CORE_ONLY
+#ifndef REB_CORE
 extern void Init_Windows(void);
 extern void Init_Graphics(void);
 #endif
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 	if (n == 1) Host_Crash("Host-lib wrong size");
 	if (n == 2) Host_Crash("Host-lib wrong version/checksum");
 
-#ifndef CORE_ONLY
+#ifndef REB_CORE
 	Init_Windows();
 	Init_Graphics();
 #endif

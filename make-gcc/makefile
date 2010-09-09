@@ -1,21 +1,20 @@
-#--- REBOL 3.0 Host Makefile - Build A106 - From make-build.r (8-Sep-2010/19:45:20)
-#--- TO MAKE: copy this file to the top level (where src/ is a dir)
+#--- REBOL 3.0 Host Makefile - Build A107 - From make-build.r (10-Sep-2010/3:38:59)
 #--- This file intentionally kept simple... to work on all platforms.
 
 C= gcc 
 #C= cc  (an alternative)
-
-CFLAGS= -c -O1 -DUNICODE -DREB_LIB -I src/include/
-#The REB_LIB flag indicates use direct linkage to reb-lib
-
-LIBS= lib/r3lib.lib -L c:/mingw/lib/ -lm -lwsock32 -lcomdlg32 -lgdi32 -lstdc++
-
-#-lc -lm -lstdc++
-
-S= src
+S= ../src
+L= ../lib
 O= obj
-I= src/include
-T= src/tools
+I= $S/include
+T= $S/tools
+
+# Set this to the name of the file copy program:
+CP=	cp
+
+CFLAGS= -c -O1 -DUNICODE -I $S/include/
+
+LIBS= $L/r3lib.lib -L c:/mingw/lib/ -lm -lwsock32 -lcomdlg32 -lgdi32 -lstdc++
 
 INCS= \
 	$I/reb-config.h\
@@ -82,12 +81,12 @@ all:
 	-mkdir obj
 	make r3.exe
 
+clean:
+	-del /q obj\*
+
 core:
 	-mkdir obj
 	make r3core.exe
-
-clean:
-	-del /q obj\*
 
 r3.exe:	 $(OBJS) $(GFX) $(AGG) r3lib.dll
 	$C $(CFLAGS) -fpack-struct -o $O/host-main.o $S/os/host-main.c
@@ -95,12 +94,12 @@ r3.exe:	 $(OBJS) $(GFX) $(AGG) r3lib.dll
 	strip r3.exe
 
 r3core.exe:	$(OBJS) r3lib.dll
-	$C $(CFLAGS) -fpack-struct -DCORE_ONLY -o $O/host-main.o $S/os/host-main.c
+	$C $(CFLAGS) -fpack-struct -DREB_CORE -o $O/host-main.o $S/os/host-main.c
 	$C -o r3core.exe $(OBJS) $(LIBS)
 	strip r3core.exe
 
-r3lib.dll: lib/r3lib.dll
-	copy lib\r3lib.dll .
+r3lib.dll: $L/r3lib.dll
+	$(CP) $L/r3lib.dll .
 
 
 #--- Convert REBOL files to C files:
@@ -131,9 +130,6 @@ $O/dev-net.o:       $S/os/dev-net.c $(INCS) $I/reb-host.h $I/host-lib.h $I/sys-n
 
 $O/dev-dns.o:       $S/os/dev-dns.c $(INCS) $I/reb-host.h $I/host-lib.h $I/sys-net.h
 	$C $(CFLAGS) -fpack-struct -o $O/dev-dns.o $S/os/dev-dns.c
-
-$O/host-init.o:     $S/os/host-init.c $(INCS) 
-	$C $(CFLAGS) -fpack-struct -o $O/host-init.o $S/os/host-init.c
 
 $O/host-lib.o:      $S/os/win32/host-lib.c $(INCS) $I/reb-host.h $I/host-lib.h
 	$C $(CFLAGS) -fpack-struct -o $O/host-lib.o $S/os/win32/host-lib.c

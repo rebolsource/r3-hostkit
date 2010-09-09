@@ -145,7 +145,7 @@ struct rebol_gob {		// size: 64 bytes!
 #define GOB_CONTENT(g)	((g)->content)
 
 // Control dependencies on series structures:
-#ifdef AS_LIB
+#ifdef REB_DEF
 #define GOB_STRING(g)	SERIES_DATA(GOB_CONTENT(g))
 #define GOB_TAIL(g)		SERIES_TAIL((g)->pane)
 #define GOB_HEAD(g)		((REBGOB **)(SERIES_DATA(GOB_PANE(g))))

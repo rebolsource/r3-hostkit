@@ -18,7 +18,7 @@
 #ifndef REB_DEFS_H  // due to sequences within the lib build itself
 #define REB_DEFS_H
 
-#ifndef AS_LIB
+#ifndef REB_DEF
 typedef void *REBSER;
 typedef void *REBOBJ;
 #endif

@@ -1,8 +1,8 @@
 REBOL 3 Host-Kit Source Distribution
 From REBOL Technologies in Ukiah, California
 
-    Version: 2.100.106.0.0  (alpha)
-    Updated: 8-Sep-2010/12:45:20-7:00 
+    Version: 2.100.107.0.0  (alpha)
+    Updated: 9-Sep-2010/20:38:59-7:00 
 
 PURPOSE:
 
@@ -23,10 +23,9 @@ five commands. Type "help" for doc pages, and "?" for a summary.
 HOW TO BUILD:
 
 We have included project makefiles for various tool-chains as make-name
-directories. Some of these can be run directly from their directories.
-Others may require you to move their files to the top directory.
+directories. They can be run directly from their directories.
 
-For some types of builds, you need rebol.exe in your build directory.
+If you change any of the .r files you need rebol.exe in your build directory.
 
 That's it for now. Be productive, lean, and quick,
 

@@ -26,6 +26,7 @@ extern void agg_image(void* gr, REBYTE* img, REBINT w, REBINT h,REBXYF offset);
 extern void agg_image_filter(void* gr, REBINT type, REBINT mode, REBDEC blur);
 extern void agg_image_options(void* gr, REBYTE* keyCol, REBINT border);
 extern void agg_image_scale(void* gr, REBYTE* img, REBINT w, REBINT h, REBSER* points);
+extern void agg_image_pattern(void* gr, REBINT mode, REBXYF offset, REBXYF size);
 extern void agg_line(void* gr, REBXYF p1, REBXYF p2);
 extern void agg_line_cap(void* gr, REBINT mode);
 extern void agg_line_join(void* gr, REBINT mode);

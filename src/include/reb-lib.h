@@ -7,8 +7,8 @@
 ************************************************************************
 **
 **  Title: REBOL Host and Extension API
-**  Build: A106
-**  Date:  8-Sep-2010
+**  Build: A107
+**  Date:  9-Sep-2010
 **  File:  reb-lib.r
 **
 **  AUTO-GENERATED FILE - Do not modify. (From: make-reb-lib.r)
@@ -20,7 +20,7 @@
 // for compatiblity with the reb-lib DLL (using RL_Version.)
 #define RL_VER 2
 #define RL_REV 100
-#define RL_UPD 106
+#define RL_UPD 107
 
 // Compatiblity with the lib requires that structs are aligned using the same
 // method. This is concrete, not abstract. The macro below uses struct
@@ -637,7 +637,7 @@ extern RL_LIB *RL;  // is passed to the RX_Init() function
 */
 
 
-#ifdef REB_LIB  // direct calls to REBOL library functions
+#ifndef REB_EXT // not extension lib, use direct calls to r3lib
 
 RL_API void RL_Version(REBYTE vers[]);
 RL_API int RL_Init(REBARGS *rargs, void *lib);
